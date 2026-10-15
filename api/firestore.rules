@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // WHY: browsers never read or write audit_events. The API uses ADC (roles/datastore.user).
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
