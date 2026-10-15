@@ -443,7 +443,56 @@ const globalFarmMetrics = computed(() => {
   }
 })
 
-// Micro-jitter simulation
+// Cross-tab synchronization with SAC ESP32 Simulator
+let sacTelemetryBus = null
+if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+  try {
+    sacTelemetryBus = new BroadcastChannel('sac_telemetry_bus')
+    sacTelemetryBus.onmessage = (event) => {
+      if (event.data && event.data.type === 'TELEMETRY') {
+        const payload = event.data.payload
+        const devId = event.data.deviceId
+        const targetPondId = payload.pond_id || (devId === 'ESP32-AQUA-01' ? 'K01' : devId === 'ESP32-AQUA-02' ? 'K02' : devId === 'ESP32-AQUA-03' ? 'K03' : 'K04')
+        const pond = ponds.value.find(p => p.id === targetPondId)
+        if (pond && payload.sensors) {
+          if (payload.sensors.dissolved_oxygen_mg_l !== undefined) pond.telemetry.do = Number(payload.sensors.dissolved_oxygen_mg_l.toFixed(2))
+          if (payload.sensors.ph !== undefined) pond.telemetry.ph = Number(payload.sensors.ph.toFixed(2))
+          if (payload.sensors.temperature_c !== undefined) pond.telemetry.temp = Number(payload.sensors.temperature_c.toFixed(1))
+          if (payload.sensors.ammonia_mg_l !== undefined) pond.telemetry.ammonia = Number(payload.sensors.ammonia_mg_l.toFixed(3))
+          if (payload.sensors.mud_solids_mg_l !== undefined) pond.telemetry.turbidity = Math.round(payload.sensors.mud_solids_mg_l)
+
+          if (payload.actuators && payload.actuators.aerator) {
+            pond.actuators.aerator.status = payload.actuators.aerator.state === 'running' ? 'RUNNING' : 'IDLE'
+            pond.actuators.aerator.powerPercent = payload.actuators.aerator.power_percent || 100
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Broadcast bus init error in frontend:', e)
+  }
+}
+
+function sendBusCommand(pondId, action, params) {
+  if (sacTelemetryBus) {
+    try {
+      const devId = pondId === 'K02' ? 'ESP32-AQUA-02' : pondId === 'K03' ? 'ESP32-AQUA-03' : pondId === 'K04' ? 'ESP32-AQUA-04' : 'ESP32-AQUA-01'
+      sacTelemetryBus.postMessage({
+        type: 'COMMAND',
+        deviceId: devId,
+        payload: {
+          command_id: `cmd-fe-${Date.now()}`,
+          action,
+          params
+        }
+      })
+    } catch (e) {
+      console.warn('Failed to send command to simulator:', e)
+    }
+  }
+}
+
+// Micro-jitter simulation (fallback if simulator not active)
 if (typeof window !== 'undefined') {
   setInterval(() => {
     if (!isLiveSimulationRunning.value) return
@@ -472,6 +521,9 @@ export function usePonds() {
     const addedKg = Number(amountKg)
     pond.actuators.feeder.dispensedTodayKg = Number((pond.actuators.feeder.dispensedTodayKg + addedKg).toFixed(1))
     pond.cumulativeFeedKg = Number(((pond.cumulativeFeedKg || 1200) + addedKg).toFixed(1))
+
+    // Broadcast command to ESP32 simulator if running
+    sendBusCommand(pondId, 'feed', { dose: Math.round(addedKg * 25), unit: 'g' })
 
     // Record action log entry
     addOperationalLog({
@@ -502,6 +554,9 @@ export function usePonds() {
     const boostDiff = (power - 80) * 0.03
     pond.telemetry.do = Math.min(8.5, Number((pond.telemetry.do + Math.max(0.4, boostDiff)).toFixed(2)))
 
+    // Broadcast command to ESP32 simulator if running
+    sendBusCommand(pondId, 'set_aerator', { state: power > 0, powerPercent: power })
+
     // Record action log entry
     addOperationalLog({
       pondId,
@@ -527,6 +582,9 @@ export function usePonds() {
     pond.actuators.dosing.flowMlMin = Math.round(doseGrams / 2)
     pond.todayMolassesGrams = (pond.todayMolassesGrams || 0) + doseGrams
     pond.cumulativeMolassesKg = Number(((pond.cumulativeMolassesKg || 25) + (doseGrams / 1000)).toFixed(2))
+
+    // Broadcast command to ESP32 simulator if running
+    sendBusCommand(pondId, 'pump_molasses', { dose: doseGrams, unit: 'ml' })
 
     // Record action log entry
     addOperationalLog({
@@ -557,6 +615,9 @@ export function usePonds() {
     const pond = ponds.value.find(p => p.id === pondId)
     if (!pond) return false
     pond.actuators.flush.status = 'FLUSHING'
+
+    // Broadcast command to ESP32 simulator if running
+    sendBusCommand(pondId, 'water_change', { volume: Math.round(percent * 15), unit: 'liter' })
 
     // Record action log entry
     addOperationalLog({

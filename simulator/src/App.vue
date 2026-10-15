@@ -31,7 +31,7 @@ onUnmounted(() => {
             <i class="bi bi-cpu-fill"></i>
           </span>
           <span class="fw-bold fs-5">ESP32 IoT Simulator</span>
-          <span class="text-secondary small ms-2 d-none d-sm-inline">| Smart Pond & Aquaculture</span>
+          <span class="text-secondary small ms-2 d-none d-sm-inline">| Smart Aquaculture & Biofloc Edge Node</span>
         </a>
 
         <div class="d-flex align-items-center gap-2">
@@ -39,7 +39,7 @@ onUnmounted(() => {
           <div class="d-flex align-items-center px-2 py-1 rounded bg-dark border border-secondary" style="font-size: 0.8rem;">
             <span class="led-indicator on-green me-2" style="width: 10px; height: 10px;"></span>
             <span class="text-light me-2">
-              <strong v-if="mqttService.mode === 'dummy'">Dummy / Mock Mode</strong>
+              <strong v-if="mqttService.mode === 'dummy'">Virtual Broker (Dummy + Bus Sync)</strong>
               <strong v-else>Real MQTT (WebSocket)</strong>
             </span>
             <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
@@ -48,8 +48,8 @@ onUnmounted(() => {
           </div>
 
           <!-- Configuration Button -->
-          <button @click="showConfigModal = true" class="btn btn-outline-secondary btn-sm" title="Pengaturan Broker & Device">
-            <i class="bi bi-gear-fill me-1"></i>Konfigurasi
+          <button @click="showConfigModal = true" class="btn btn-outline-secondary btn-sm" title="Configure MQTT Broker & Device Node">
+            <i class="bi bi-gear-fill me-1"></i>Configure
           </button>
         </div>
       </div>
@@ -67,7 +67,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Section 2: Actuators (Feeder, Molasses, Water Change) -->
+      <!-- Section 2: Actuators (Aerator, Feeder, Molasses, Water Change) -->
       <div class="row g-3 mb-3">
         <div class="col-12">
           <ActuatorPanel />

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { pondState, simulationEngine } from '../services/simulationEngine'
+import { pondState, simulationEngine, DEVICE_PROFILES } from '../services/simulationEngine'
 import { mqttService } from '../services/mqttService'
 
 const formattedUptime = computed(() => {
@@ -21,15 +21,28 @@ const handleReset = () => {
   ]
   simulationEngine.publishEvent('DEVICE_REBOOT', { uptime_reset: true })
 }
+
+const handleProfileChange = (e) => {
+  simulationEngine.setDeviceProfile(e.target.value)
+}
 </script>
 
 <template>
   <div class="card card-iot h-100">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span>
-        <i class="bi bi-cpu me-2 text-primary"></i>Perangkat Fisik ESP32 (Hardware Mockup)
+        <i class="bi bi-cpu me-2 text-primary"></i>ESP32 Physical Microcontroller
       </span>
-      <span class="badge bg-secondary font-monospace">{{ pondState.deviceId }}</span>
+      <select 
+        class="form-select form-select-sm bg-dark text-light border-secondary w-auto py-0" 
+        style="font-size: 0.75rem;" 
+        :value="pondState.deviceId"
+        @change="handleProfileChange"
+      >
+        <option v-for="prof in DEVICE_PROFILES" :key="prof.id" :value="prof.id">
+          {{ prof.id }} ({{ prof.pondId }})
+        </option>
+      </select>
     </div>
     <div class="card-body">
       <!-- PCB Board Container -->
@@ -79,12 +92,16 @@ const handleReset = () => {
               <div class="text-secondary mt-1">MQTT_TX</div>
             </div>
             <div class="col">
+              <span :class="['led-indicator', pondState.leds.actAerator ? 'on-cyan' : '']"></span>
+              <div class="text-secondary mt-1">AERATOR</div>
+            </div>
+            <div class="col">
               <span :class="['led-indicator', pondState.leds.actFeeder ? 'on-green' : '']"></span>
               <div class="text-secondary mt-1">FEED</div>
             </div>
             <div class="col">
               <span :class="['led-indicator', pondState.leds.actMolasses ? 'on-purple' : '']"></span>
-              <div class="text-secondary mt-1">MOLASE</div>
+              <div class="text-secondary mt-1">MOLASSE</div>
             </div>
             <div class="col">
               <span :class="['led-indicator', pondState.leds.actWater ? 'on-cyan' : '']"></span>
@@ -100,15 +117,25 @@ const handleReset = () => {
             <span class="text-light font-monospace">{{ formattedUptime }}</span>
           </div>
           <div>
-            <i class="bi bi-battery-charging me-1 text-success"></i>Baterai: 
+            <i class="bi bi-battery-charging me-1 text-success"></i>Batt: 
             <span class="text-light font-monospace">{{ pondState.batteryVoltage }}V</span>
           </div>
           <div>
-            <button @click="handleReset" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.7rem;" title="Simulasikan restart microcontroller">
-              <i class="bi bi-arrow-clockwise me-1"></i>Reboot ESP32
-            </button>
+            <i class="bi bi-memory me-1 text-warning"></i>Heap: 
+            <span class="text-light font-monospace">{{ Math.round(pondState.freeHeap / 1024) }}KB</span>
           </div>
         </div>
+      </div>
+
+      <!-- Action Hardware Controls below PCB -->
+      <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
+        <button @click="handleReset" class="btn btn-outline-danger btn-sm" title="Reboot MCU and reset counters">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Hardware Reset (EN Pin)
+        </button>
+
+        <span class="text-secondary small" style="font-size: 0.75rem;">
+          Firmware: <strong class="text-light font-monospace">SAC-v1.2.0-PROD</strong>
+        </span>
       </div>
     </div>
   </div>

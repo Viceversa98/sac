@@ -60,8 +60,8 @@ const copyToClipboard = (data) => {
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-terminal-split me-1 text-success"></i>
-        <span>MQTT Traffic & Traffic Inspector</span>
-        <span class="badge bg-secondary font-monospace" style="font-size: 0.72rem;">{{ filteredLogs.length }} Log</span>
+        <span>MQTT Traffic & Packet Inspector</span>
+        <span class="badge bg-secondary font-monospace" style="font-size: 0.72rem;">{{ filteredLogs.length }} Messages</span>
       </div>
 
       <div class="d-flex align-items-center gap-1">
@@ -72,21 +72,21 @@ const copyToClipboard = (data) => {
             :class="['btn btn-sm py-0 px-2', activeFilter === 'ALL' ? 'btn-secondary active' : 'btn-outline-secondary text-light']"
             style="font-size: 0.75rem;"
           >
-            Semua
+            All
           </button>
           <button 
             @click="activeFilter = 'OUTGOING'" 
             :class="['btn btn-sm py-0 px-2', activeFilter === 'OUTGOING' ? 'btn-primary active' : 'btn-outline-primary']"
             style="font-size: 0.75rem;"
           >
-            Telemetri (Out)
+            Telemetry (Out)
           </button>
           <button 
             @click="activeFilter = 'INCOMING'" 
             :class="['btn btn-sm py-0 px-2', activeFilter === 'INCOMING' ? 'btn-danger active' : 'btn-outline-danger']"
             style="font-size: 0.75rem;"
           >
-            Perintah (In)
+            Commands (In)
           </button>
           <button 
             @click="activeFilter = 'EVENT'" 
@@ -97,7 +97,7 @@ const copyToClipboard = (data) => {
           </button>
         </div>
 
-        <button @click="clearAllLogs" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" title="Bersihkan riwayat log">
+        <button @click="clearAllLogs" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;" title="Clear message log">
           <i class="bi bi-trash"></i>
         </button>
       </div>
@@ -107,7 +107,7 @@ const copyToClipboard = (data) => {
       <div ref="terminalRef" class="terminal-box p-2">
         <div v-if="filteredLogs.length === 0" class="text-secondary text-center py-4">
           <i class="bi bi-inbox fs-4 d-block mb-1"></i>
-          Belum ada lalu lintas pesan MQTT yang tercatat.
+          No MQTT traffic captured yet.
         </div>
 
         <div v-for="log in filteredLogs" :key="log.id" class="terminal-line">
@@ -133,7 +133,7 @@ const copyToClipboard = (data) => {
               @click="copyToClipboard(log.data)" 
               class="btn btn-link text-secondary p-0 text-decoration-none" 
               style="font-size: 0.7rem;" 
-              title="Salin JSON"
+              title="Copy JSON Payload"
             >
               <i class="bi bi-clipboard"></i>
             </button>

@@ -17,6 +17,29 @@ class MqttService {
       commandTopic: 'esp32/ESP32-AQUA-01/commands',
       eventTopic: 'esp32/ESP32-AQUA-01/events',
     }
+
+    // Modern cross-tab browser communication bridge
+    this.broadcastChannel = null
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      try {
+        this.broadcastChannel = new BroadcastChannel('sac_telemetry_bus')
+        this.broadcastChannel.onmessage = (event) => {
+          if (event.data && event.data.type === 'COMMAND') {
+            const targetDev = event.data.deviceId
+            if (!targetDev || targetDev === this.config.deviceId) {
+              this.logTraffic('INCOMING (BROWSER_SYNC)', this.config.commandTopic, event.data.payload)
+              this.emit('message', {
+                topic: this.config.commandTopic,
+                payload: event.data.payload,
+                raw: JSON.stringify(event.data.payload)
+              })
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('BroadcastChannel initialization skipped:', e)
+      }
+    }
   }
 
   setMode(mode) {
@@ -129,11 +152,34 @@ class MqttService {
 
   publish(topic, payload) {
     const payloadStr = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2)
-    this.logTraffic('OUTGOING', topic, payload)
+    let parsedData = null
+    try {
+      parsedData = typeof payload === 'string' ? JSON.parse(payload) : payload
+    } catch {
+      parsedData = payload
+    }
+
+    this.logTraffic('OUTGOING', topic, parsedData)
+
+    // Broadcast across browser tabs for live dashboard sync
+    if (this.broadcastChannel) {
+      try {
+        const isTelemetry = topic.includes('/telemetry')
+        this.broadcastChannel.postMessage({
+          type: isTelemetry ? 'TELEMETRY' : 'EVENT',
+          deviceId: this.config.deviceId,
+          topic,
+          payload: parsedData,
+          timestamp: Date.now()
+        })
+      } catch (err) {
+        console.warn('Broadcast sync error:', err)
+      }
+    }
 
     if (this.mode === 'dummy') {
       // In dummy mode, notify internal listeners
-      this.emit('published', { topic, payload })
+      this.emit('published', { topic, payload: parsedData })
       return true
     }
 
