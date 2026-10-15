@@ -6,12 +6,12 @@ export const pondState = reactive({
   ph: 7.20,
   temperature: 28.5,
   ammonia: 0.22,
-  mudSolids: 95.0, // Total lumpur terlarut (mg/L / NTU)
+  mudSolids: 95.0, // Total suspended solids / turbidity (mg/L / NTU)
   dissolvedOxygen: 6.40, // DO (mg/L)
   
   // Settings
   autoDrift: true,
-  publishInterval: 5, // detik
+  publishInterval: 5, // seconds
   nextPublishCountdown: 5,
   isPublishing: false,
 
@@ -25,7 +25,7 @@ export const pondState = reactive({
   // Actuator States
   feeder: {
     state: 'idle', // 'idle' | 'running'
-    dose: 0, // gram
+    dose: 0, // grams
     progress: 0,
     totalToday: 0,
     lastTriggered: null,
@@ -437,7 +437,7 @@ class SimulationEngine {
       case 'ammonia_spike':
         pondState.ph = 7.9
         pondState.temperature = 30.5
-        pondState.ammonia = 1.45 // KRITIS
+        pondState.ammonia = 1.45 // CRITICAL
         pondState.mudSolids = 180.0
         pondState.dissolvedOxygen = 4.2
         break
@@ -446,13 +446,13 @@ class SimulationEngine {
         pondState.temperature = 26.5
         pondState.ammonia = 0.45
         pondState.mudSolids = 120.0
-        pondState.dissolvedOxygen = 2.4 // KRITIS
+        pondState.dissolvedOxygen = 2.4 // CRITICAL
         break
       case 'heavy_mud':
         pondState.ph = 7.1
         pondState.temperature = 28.0
         pondState.ammonia = 0.85
-        pondState.mudSolids = 350.0 // Sangat keruh/lumpur tinggi
+        pondState.mudSolids = 350.0 // Heavy turbidity / sludge accumulation
         pondState.dissolvedOxygen = 3.8
         break
     }

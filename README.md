@@ -1,59 +1,59 @@
 # Sampay Aquaculture Co-Pilot (SAC) Platform
 
-Platform AI & IoT cerdas untuk pengelolaan akuakultur dan sistem bioflok modern.
+An intelligent AI & IoT platform for smart aquaculture management and modern biofloc systems.
 
-Repository ini menggunakan struktur **Monorepo** yang menyatukan seluruh komponen sistem: Frontend, Simulator IoT, Backend, dan Dokumentasi.
+This repository uses a **Monorepo** structure that unifies all system components: Frontend, IoT Simulator, Backend, and Documentation.
 
 ---
 
-## 📁 Struktur Direktori
+## 📁 Directory Structure
 
 ```text
 SAC/
 ├── frontend/     # Web Dashboard & AI Copilot (Vue 3 + Vite)
-├── simulator/    # ESP32 IoT Pond Telemetry & Actuator Simulator
+├── simulator/    # ESP32 IoT Pond Telemetry & Actuator Simulator (Vue 3 + Vite)
 ├── backend/      # Backend API & IoT MQTT Message Broker Service
-├── plan/         # Dokumen perencanaan, skema arsitektur & panduan sistem
+├── plan/         # Architecture planning documents, diagrams & guidelines
 ├── package.json  # Root package orchestrator
-└── README.md     # Panduan monorepo ini
+└── README.md     # Monorepo documentation
 ```
 
 ---
 
-## 🚀 Quick Start (Memulai Pengembangan)
+## 🚀 Quick Start (Development)
 
-### 1. Prasyarat
-- Node.js (versi 18+ disarankan)
+### 1. Prerequisites
+- Node.js (version 18+ recommended)
 - npm
 
-### 2. Menjalankan Komponen
+### 2. Running Components
 
-Dari root direktori project:
+From the root directory:
 
 ```bash
-# Menjalankan Web Frontend Dashboard (Port: 5173)
+# Run Web Frontend Dashboard (Port: 5173)
 npm run dev:frontend
 
-# Menjalankan ESP32 IoT Pond Simulator (Port: 5175)
+# Run ESP32 IoT Pond Simulator (Port: 5175)
 npm run dev:simulator
 
-# Menjalankan Backend Service
+# Run Backend Service
 npm run dev:backend
 ```
 
-Atau masuk ke direktori masing-masing:
+Or navigate to each respective directory:
 ```bash
-# Masuk ke Frontend
+# Run Frontend
 cd frontend
 npm install
 npm run dev
 
-# Masuk ke Simulator
+# Run Simulator
 cd simulator
 npm install
 npm run dev
 
-# Masuk ke Backend
+# Run Backend
 cd backend
 npm install
 npm run dev
@@ -61,33 +61,33 @@ npm run dev
 
 ---
 
-## 🛠️ Komponen Sistem
+## 🛠️ System Components
 
 ### 1. `frontend/` (SAC Web Dashboard & Copilot)
 - **Tech Stack:** Vue 3, Vite, Lucide Vue, Bootstrap Icons.
-- **Fitur:**
-  - Realtime water telemetry monitoring (Suhu, pH, DO, TDS, Turbidity).
-  - Kalkulator Biofloc & C:N ratio analysis.
-  - Asisten AI Copilot untuk rekomendasi operasional tambak.
-  - Manajemen siklus kolam (tebar benih, sampling, panen).
-  - Kontrol matriks aktuator (aerator, feeder, pompa).
+- **Key Features:**
+  - Real-time water telemetry monitoring (Temperature, pH, DO, TDS, Turbidity).
+  - Biofloc Science & C:N ratio calculator.
+  - AI Aquaculture Copilot for actionable pond intervention suggestions.
+  - Pond lifecycle management (stocking, sampling, harvesting).
+  - Actuator matrix control (aerator, feeder, water pump).
 
 ### 2. `simulator/` (ESP32 IoT Pond Simulator)
 - **Tech Stack:** Vue 3, Vite, MQTT.js, Bootstrap 5.
-- **Fitur:**
-  - Simulasi sensor kolam dengan model fluktuasi alami (suhu, DO, pH, amonia).
-  - Virtual Broker MQTT internal (dummy mode) & Real WebSocket MQTT broker.
-  - Simulasi aktuator (aerator, feeder, kalkulasi pakan).
-  - Log transmisi telemetri dan testing skenario krisis (DO drop, amonia spike).
+- **Key Features:**
+  - Realistic pond sensor telemetry simulation with natural biological drift models.
+  - Dual MQTT modes: Internal Virtual Broker (dummy mode) & Real WebSocket MQTT broker.
+  - Interactive actuator simulations (automated feeder, molasses dosing, water change).
+  - Live telemetry traffic log viewer and crisis scenario testing (DO drop, ammonia spike, heavy sludge).
 
 ### 3. `backend/` (Backend Service & API)
-- Menangani komunikasi MQTT broker, rest API, penyimpanan riwayat data telemetri, dan integrasi model LLM AI Copilot.
+- Handles MQTT message ingestion, REST APIs, telemetry time-series storage, and AI Copilot LLM integrations.
 
-### 4. `plan/` (Dokumentasi Arsitektur)
-- Berisi file spesifikasi desain, roadmap fitur, dan alur integrasi sistem (`plan.pdf`).
+### 4. `plan/` (Architecture & Specifications)
+- Contains design specifications, roadmap features, and system integration workflows (`plan.pdf`).
 
 ---
 
-## 🔒 Environment & Keamanan
-- Pastikan file kredensial/rahasia (seperti `.env`, API key, token database/broker) selalu berada di dalam file `.env` yang sudah diabaikan oleh `.gitignore`.
-- Jangan pernah meng-commit file `.env` ke repository.
+## 🔒 Environment & Security
+- Ensure confidential files (such as `.env`, API keys, database or MQTT credentials) are kept inside `.env` files that are ignored by `.gitignore`.
+- Never commit `.env` files into the repository.

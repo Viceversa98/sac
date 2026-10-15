@@ -1,15 +1,18 @@
 # SAC Backend Service
 
-Layanan Backend API & Integrasi IoT MQTT untuk Sampay Aquaculture Co-Pilot (SAC).
+Backend API and IoT MQTT message broker integration service for Sampay Aquaculture Co-Pilot (SAC).
 
-## Rencana Arsitektur & Fitur
-- **Telemetry Ingestion**: Menangkap data sensor real-time dari ESP32 / Simulator via MQTT broker.
-- **Actuator Controller**: Mengirimkan perintah aktuator (aerator, feeder, pompa) ke node kolam.
-- **AI Copilot & Biofloc Engine**: Evaluasi parameter kualitas air, penghitungan dosis molase/C:N ratio, dan deteksi anomali.
-- **Database & Audit Logs**: Riwayat telemetri, log tindakan, dan riwayat siklus budidaya kolam.
+## Architecture & Roadmap
+- **Telemetry Ingestion**: Ingests high-frequency sensor readings from ESP32 edge nodes and the pond simulator via MQTT broker.
+- **Actuator Controller**: Dispatches verified control commands (aerators, feeders, water pumps) to edge controllers.
+- **AI Copilot & Biofloc Engine**: Evaluates water quality time-series, calculates C:N ratio requirements, predicts anomalies, and generates LLM-powered recommendations.
+- **Database & Audit Logs**: Stores historical telemetry records, operation audit trails, and pond lifecycle data.
 
-## Quick Start
+## Setup & Development
 ```bash
+# Install dependencies
 npm install
+
+# Run service
 npm run dev
 ```

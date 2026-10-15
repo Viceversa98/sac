@@ -40,14 +40,14 @@ class MqttService {
       setTimeout(() => {
         this.isConnected = true
         this.emit('connect', { mode: 'dummy' })
-        this.logTraffic('SYSTEM', 'DUMMY_BROKER', 'Tersambung ke Virtual Broker Internal (Dummy Mode)')
+        this.logTraffic('SYSTEM', 'DUMMY_BROKER', 'Connected to Virtual Internal Broker (Dummy Mode)')
       }, 300)
       return
     }
 
     // Real MQTT over WebSocket
     try {
-      this.logTraffic('SYSTEM', this.config.brokerUrl, `Menghubungkan ke ${this.config.brokerUrl}...`)
+      this.logTraffic('SYSTEM', this.config.brokerUrl, `Connecting to ${this.config.brokerUrl}...`)
       const options = {
         clientId: this.config.clientId,
         clean: true,
@@ -62,7 +62,7 @@ class MqttService {
       this.client.on('connect', () => {
         this.isConnected = true
         this.emit('connect', { mode: 'real' })
-        this.logTraffic('SYSTEM', 'MQTT', `Terhubung ke broker ${this.config.brokerUrl}`)
+        this.logTraffic('SYSTEM', 'MQTT', `Successfully connected to broker ${this.config.brokerUrl}`)
         // Auto-subscribe to commands topic
         this.subscribe(this.config.commandTopic)
       })
@@ -80,17 +80,17 @@ class MqttService {
       })
 
       this.client.on('error', (err) => {
-        this.logTraffic('ERROR', 'MQTT', err.message || 'Koneksi error')
+        this.logTraffic('ERROR', 'MQTT', err.message || 'Connection error')
         this.emit('error', err)
       })
 
       this.client.on('offline', () => {
         this.isConnected = false
-        this.logTraffic('SYSTEM', 'MQTT', 'Koneksi broker terputus (Offline)')
+        this.logTraffic('SYSTEM', 'MQTT', 'Broker connection lost (Offline)')
         this.emit('offline')
       })
     } catch (err) {
-      this.logTraffic('ERROR', 'MQTT', 'Gagal inisialisasi MQTT: ' + err.message)
+      this.logTraffic('ERROR', 'MQTT', 'Failed to initialize MQTT: ' + err.message)
     }
   }
 
@@ -98,7 +98,7 @@ class MqttService {
     if (this.mode === 'dummy') {
       this.isConnected = false
       this.emit('offline')
-      this.logTraffic('SYSTEM', 'DUMMY_BROKER', 'Virtual Broker Internal dihentikan')
+      this.logTraffic('SYSTEM', 'DUMMY_BROKER', 'Virtual Internal Broker stopped')
       return
     }
 
@@ -112,16 +112,16 @@ class MqttService {
 
   subscribe(topic) {
     if (this.mode === 'dummy') {
-      this.logTraffic('SYSTEM', 'SUBSCRIBE', `Subscribed ke topik dummy: ${topic}`)
+      this.logTraffic('SYSTEM', 'SUBSCRIBE', `Subscribed to dummy topic: ${topic}`)
       return
     }
 
     if (this.client && this.isConnected) {
       this.client.subscribe(topic, (err) => {
         if (!err) {
-          this.logTraffic('SYSTEM', 'SUBSCRIBE', `Subscribed ke topik: ${topic}`)
+          this.logTraffic('SYSTEM', 'SUBSCRIBE', `Subscribed to topic: ${topic}`)
         } else {
-          this.logTraffic('ERROR', 'SUBSCRIBE', `Gagal subscribe ${topic}: ${err.message}`)
+          this.logTraffic('ERROR', 'SUBSCRIBE', `Failed to subscribe to ${topic}: ${err.message}`)
         }
       })
     }
@@ -141,7 +141,7 @@ class MqttService {
       this.client.publish(topic, payloadStr, { qos: 0 })
       return true
     } else {
-      this.logTraffic('WARN', topic, 'Gagal publish: MQTT client belum terhubung.')
+      this.logTraffic('WARN', topic, 'Publish failed: MQTT client is disconnected.')
       return false
     }
   }

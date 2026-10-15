@@ -1,28 +1,29 @@
-# fe-sec (Sampay Agriculture Co-Pilot Frontend)
+# SAC Frontend (Sampay Aquaculture Co-Pilot Web App)
 
-Dashboard & AI Co-Pilot frontend untuk sistem monitoring dan manajemen akuakultur / bioflok cerdas berbasis Vue 3 dan Vite.
+Web Dashboard & AI Co-Pilot frontend for intelligent aquaculture and biofloc management, built with Vue 3 and Vite.
 
-## Fitur Utama
-- **Realtime Telemetry Monitoring**: Monitoring parameter air (Suhu, pH, DO, TDS, Kekeruhan).
-- **Biofloc Science & Calculator**: Perhitungan rasio C:N, dosis molase/karbon, dan feed management.
-- **AI Aquaculture Copilot**: Asisten cerdas untuk rekomendasi tindakan operasional kolam.
-- **Actuator & Hardware Management**: Kontrol aerator, feeder otomatis, dan pompa.
-- **Auditing & Scenario Simulator**: Log tindakan dan simulasi kondisi kolam.
+## Key Features
+- **Real-time Telemetry Monitoring**: Live monitoring for water parameters (Temperature, pH, Dissolved Oxygen, TDS, Turbidity).
+- **Biofloc Science & Calculator**: Dynamic C:N ratio computation, molasses/carbon source dosing, and feed assimilation calculators based on Avnimelech models.
+- **AI Aquaculture Copilot**: Natural language and contextual recommendations for pond operations.
+- **Actuator & Hardware Management**: Comprehensive control matrix for aerators, automatic feeders, and water exchange pumps.
+- **Auditing & Scenario Simulator**: Action logs, mortality history, growth curve projections, and pond stress testing.
 
 ## Tech Stack
 - Vue 3 (Composition API)
 - Vite
 - Lucide Vue Next
+- Bootstrap Icons
 
-## Setup & Menjalankan Project
+## Setup & Development
 
 ```bash
 # Install dependencies
 npm install
 
-# Jalankan server development
+# Start development server (Port 5173)
 npm run dev
 
-# Build untuk produksi
+# Build for production
 npm run build
 ```
