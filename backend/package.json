@@ -1,0 +1,13 @@
+{
+  "name": "sac-backend",
+  "version": "1.0.0",
+  "description": "Sampay Aquaculture Co-Pilot (SAC) Backend API & IoT MQTT Broker Service",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
