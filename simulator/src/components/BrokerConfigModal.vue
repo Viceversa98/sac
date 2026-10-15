@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive } from 'vue'
 import { mqttService } from '../services/mqttService'
 import { pondState } from '../services/simulationEngine'
 
@@ -41,82 +41,85 @@ const saveAndApply = () => {
 </script>
 
 <template>
-  <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.75);">
+  <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px);">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark border-secondary text-light">
-        <div class="modal-header border-secondary">
-          <h5 class="modal-title">
-            <i class="bi bi-sliders me-2 text-primary"></i>MQTT Connection & Operating Mode
-          </h5>
-          <button type="button" class="btn-close btn-close-white" @click="emit('close')"></button>
+      <div class="modal-content bg-white border-0 shadow-lg text-dark" style="border-radius: 16px;">
+        <div class="modal-header border-bottom py-3 px-4">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary bg-opacity-10 text-primary p-2 rounded-circle">
+              <i class="bi bi-sliders fs-6"></i>
+            </span>
+            <h5 class="modal-title fs-6 fw-bold mb-0">MQTT Communication & Operating Mode</h5>
+          </div>
+          <button type="button" class="btn-close" @click="emit('close')"></button>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body p-4">
           <!-- Mode Selector -->
           <div class="mb-3">
-            <label class="form-label fw-bold small text-info">Communication Mode:</label>
-            <div class="form-check p-2 rounded bg-black bg-opacity-40 border border-secondary mb-2">
-              <input class="form-check-input ms-1" type="radio" id="modeDummy" value="dummy" v-model="form.mode">
+            <label class="form-label fw-bold small text-secondary">Communication Bus:</label>
+            <div class="form-check p-3 rounded bg-light border mb-2 cursor-pointer">
+              <input class="form-check-input ms-0" type="radio" id="modeDummy" value="dummy" v-model="form.mode">
               <label class="form-check-label ms-2" for="modeDummy">
-                <strong>Internal Virtual Broker (Recommended for Local Dev)</strong>
-                <div class="small text-secondary">
-                  Simulator runs self-contained in your browser with cross-tab BroadcastChannel sync to the SAC frontend. No external network broker needed.
+                <strong class="text-dark">Internal Virtual Bus + Cross-Tab Sync (Active)</strong>
+                <div class="small text-muted mt-1" style="font-size: 0.8rem;">
+                  Simulator runs self-contained in your browser with automatic <code>BroadcastChannel</code> synchronization to the SAC frontend at <a href="http://localhost:5173" target="_blank">localhost:5173</a>. No external broker installation required.
                 </div>
               </label>
             </div>
 
-            <div class="form-check p-2 rounded bg-black bg-opacity-40 border border-secondary">
-              <input class="form-check-input ms-1" type="radio" id="modeReal" value="real" v-model="form.mode">
+            <div class="form-check p-3 rounded bg-light border cursor-pointer">
+              <input class="form-check-input ms-0" type="radio" id="modeReal" value="real" v-model="form.mode">
               <label class="form-check-label ms-2" for="modeReal">
-                <strong>Real MQTT over WebSocket</strong>
-                <div class="small text-secondary">
-                  Connects your browser directly to an external Mosquitto, EMQX, or HiveMQ broker using WebSocket (ws:// or wss://).
+                <strong class="text-dark">Real MQTT over WebSocket</strong>
+                <div class="small text-muted mt-1" style="font-size: 0.8rem;">
+                  Connects to a network or cloud MQTT broker (Mosquitto/EMQX/HiveMQ) using WebSocket protocols (ws:// or wss://).
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Real MQTT Settings -->
-          <div v-if="form.mode === 'real'" class="border-top border-secondary pt-3 mt-3">
+          <div v-if="form.mode === 'real'" class="border-top pt-3 mt-3">
             <div class="mb-3">
               <label class="form-label small text-secondary">Broker Presets:</label>
               <div class="btn-group btn-group-sm w-100">
                 <button type="button" @click="applyPreset('local')" class="btn btn-outline-secondary">Local Mosquitto (9001)</button>
-                <button type="button" @click="applyPreset('emqx')" class="btn btn-outline-secondary">EMQX Public (wss)</button>
-                <button type="button" @click="applyPreset('hivemq')" class="btn btn-outline-secondary">HiveMQ Public (wss)</button>
+                <button type="button" @click="applyPreset('emqx')" class="btn btn-outline-secondary">EMQX Cloud (wss)</button>
+                <button type="button" @click="applyPreset('hivemq')" class="btn btn-outline-secondary">HiveMQ (wss)</button>
               </div>
             </div>
 
             <div class="mb-3">
               <label class="form-label small text-secondary">WebSocket URL:</label>
-              <input type="text" class="form-control form-control-sm bg-black text-light border-secondary" v-model="form.brokerUrl" placeholder="ws://localhost:9001">
+              <input type="text" class="form-control form-control-sm" v-model="form.brokerUrl" placeholder="ws://localhost:9001">
             </div>
 
             <div class="row g-2 mb-3">
               <div class="col-6">
                 <label class="form-label small text-secondary">Username (Optional):</label>
-                <input type="text" class="form-control form-control-sm bg-black text-light border-secondary" v-model="form.username">
+                <input type="text" class="form-control form-control-sm" v-model="form.username">
               </div>
               <div class="col-6">
                 <label class="form-label small text-secondary">Password (Optional):</label>
-                <input type="password" class="form-control form-control-sm bg-black text-light border-secondary" v-model="form.password">
+                <input type="password" class="form-control form-control-sm" v-model="form.password">
               </div>
             </div>
           </div>
 
           <!-- Device ID -->
-          <div class="border-top border-secondary pt-3 mt-3">
-            <label class="form-label small text-secondary">ESP32 Device Node ID:</label>
-            <input type="text" class="form-control form-control-sm bg-black text-light border-secondary" v-model="form.deviceId">
-            <div class="small text-secondary mt-1" style="font-size: 0.72rem;">
-              MQTT Topic format: <code>esp32/{{ form.deviceId }}/...</code>
+          <div class="border-top pt-3 mt-3">
+            <label class="form-label small text-secondary fw-semibold">ESP32 Device Node ID:</label>
+            <input type="text" class="form-control form-control-sm" v-model="form.deviceId">
+            <div class="small text-muted mt-1" style="font-size: 0.75rem;">
+              Telemetry Topic: <code>esp32/{{ form.deviceId }}/telemetry</code>
             </div>
           </div>
         </div>
 
-        <div class="modal-footer border-secondary">
-          <button type="button" class="btn btn-secondary btn-sm" @click="emit('close')">Cancel</button>
-          <button type="button" class="btn btn-primary btn-sm" @click="saveAndApply">Apply Configuration</button>
+        <div class="modal-footer border-top py-2 px-4 bg-light" style="border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+          <button type="button" class="btn btn-light btn-sm border" @click="emit('close')">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm px-3" @click="saveAndApply">Apply Configuration</button>
         </div>
       </div>
     </div>

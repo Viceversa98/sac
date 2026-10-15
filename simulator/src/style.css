@@ -1,152 +1,123 @@
 :root {
-  --esp-bg-dark: #0f172a;
-  --esp-card-bg: #1e293b;
-  --esp-card-border: #334155;
-  --esp-pcb: #132a13;
-  --esp-pcb-border: #2d6a4f;
-  --oled-bg: #000000;
-  --oled-text: #38bdf8;
-  --led-green: #22c55e;
+  --esp-bg-light: #f8fafc;
+  --esp-card-bg: #ffffff;
+  --esp-card-border: #e2e8f0;
+  --esp-text-primary: #0f172a;
+  --esp-text-secondary: #475569;
+  --esp-text-muted: #94a3b8;
+  --esp-accent: #2563eb;
+  --esp-success: #10b981;
+  --esp-warning: #f59e0b;
+  --esp-danger: #ef4444;
+  --esp-info: #0284c7;
+  --led-green: #10b981;
   --led-amber: #f59e0b;
   --led-red: #ef4444;
   --led-blue: #3b82f6;
   --led-cyan: #06b6d4;
-  --led-purple: #a855f7;
+  --led-purple: #8b5cf6;
 }
 
 body {
-  background-color: var(--esp-bg-dark);
-  color: #f1f5f9;
+  background-color: var(--esp-bg-light);
+  color: var(--esp-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
 }
 
-/* Custom Card Styling */
+/* Light Theme Modern Card Styling */
 .card-iot {
   background-color: var(--esp-card-bg);
   border: 1px solid var(--esp-card-border);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .card-iot:hover {
-  border-color: #475569;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.06);
 }
 
 .card-iot .card-header {
-  background-color: rgba(15, 23, 42, 0.6);
-  border-bottom: 1px solid var(--esp-card-border);
-  padding: 0.85rem 1.25rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.9rem 1.25rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  color: var(--esp-text-primary);
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
 }
 
-/* PCB Board Simulation */
-.esp32-pcb {
-  background: radial-gradient(circle at 50% 50%, #1e3a1e 0%, #0d200d 100%);
-  border: 3px solid #2d6a4f;
-  border-radius: 16px;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.6);
-  position: relative;
-  overflow: hidden;
-}
-
-.esp32-pcb::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: 
-    linear-gradient(rgba(45, 106, 79, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(45, 106, 79, 0.15) 1px, transparent 1px);
-  background-size: 20px 20px;
-  pointer-events: none;
-}
-
-.metal-chip {
-  background: linear-gradient(135deg, #475569 0%, #1e293b 50%, #334155 100%);
-  border: 2px solid #64748b;
-  border-radius: 6px;
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.3), 0 4px 10px rgba(0,0,0,0.5);
-  color: #cbd5e1;
-  font-family: monospace;
-}
-
-/* OLED Screen */
-.oled-screen {
-  background-color: var(--oled-bg);
-  border: 3px solid #0f172a;
-  border-radius: 6px;
-  color: var(--oled-text);
-  font-family: 'Courier New', Courier, monospace;
-  box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.2), 0 0 10px rgba(0,0,0,0.8);
-  padding: 10px;
-  min-height: 110px;
-}
-
-/* Realistic LEDs */
+/* Status Indicator LEDs on Light Theme */
 .led-indicator {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   display: inline-block;
-  background-color: #334155;
-  border: 1px solid #1e293b;
-  transition: all 0.15s ease-in-out;
+  background-color: #cbd5e1;
+  border: 1px solid #94a3b8;
+  transition: all 0.2s ease-in-out;
 }
 
 .led-indicator.on-green {
   background-color: var(--led-green);
-  box-shadow: 0 0 10px var(--led-green), 0 0 20px var(--led-green);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  border-color: #059669;
 }
 
 .led-indicator.on-amber {
   background-color: var(--led-amber);
-  box-shadow: 0 0 10px var(--led-amber), 0 0 20px var(--led-amber);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  border-color: #d97706;
 }
 
 .led-indicator.on-red {
   background-color: var(--led-red);
-  box-shadow: 0 0 10px var(--led-red), 0 0 20px var(--led-red);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+  border-color: #dc2626;
 }
 
 .led-indicator.on-blue {
   background-color: var(--led-blue);
-  box-shadow: 0 0 10px var(--led-blue), 0 0 20px var(--led-blue);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  border-color: #2563eb;
 }
 
 .led-indicator.on-cyan {
   background-color: var(--led-cyan);
-  box-shadow: 0 0 10px var(--led-cyan), 0 0 20px var(--led-cyan);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+  border-color: #0891b2;
 }
 
 .led-indicator.on-purple {
   background-color: var(--led-purple);
-  box-shadow: 0 0 10px var(--led-purple), 0 0 20px var(--led-purple);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+  border-color: #7c3aed;
 }
 
-/* Terminal Console */
-.terminal-box {
-  background-color: #0b0f19;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
+/* Light Terminal Console for Traffic Inspector */
+.terminal-box-light {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.85rem;
-  max-height: 320px;
+  font-size: 0.82rem;
+  max-height: 340px;
   overflow-y: auto;
 }
 
-.terminal-line {
-  padding: 4px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+.terminal-line-light {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f1f5f9;
   word-break: break-all;
 }
 
-.terminal-line:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+.terminal-line-light:hover {
+  background-color: #f1f5f9;
 }
 
-/* Spin animation for motors/feeders */
+/* Animations */
 @keyframes spin {
   100% {
     transform: rotate(360deg);
@@ -163,25 +134,34 @@ body {
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.45; }
 }
 
 .animate-pulse {
   animation: pulse-subtle 1.2s infinite ease-in-out;
 }
 
-/* Custom scrollbars */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bounce {
+  animation: bounce-subtle 0.8s infinite ease-in-out;
+}
+
+/* Custom modern scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
 }

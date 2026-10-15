@@ -1,13 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { simulationEngine, pondState } from './services/simulationEngine'
+import { simulationEngine } from './services/simulationEngine'
 import { mqttService } from './services/mqttService'
 
-import Esp32Board from './components/Esp32Board.vue'
-import TelemetryPanel from './components/TelemetryPanel.vue'
-import ActuatorPanel from './components/ActuatorPanel.vue'
-import BackendMockConsole from './components/BackendMockConsole.vue'
-import MqttLogViewer from './components/MqttLogViewer.vue'
+import DeviceStatusCards from './components/DeviceStatusCards.vue'
+import ActiveExecutionPanel from './components/ActiveExecutionPanel.vue'
+import TelemetryTrafficStream from './components/TelemetryTrafficStream.vue'
 import BrokerConfigModal from './components/BrokerConfigModal.vue'
 
 const showConfigModal = ref(false)
@@ -22,34 +20,47 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-vh-100 d-flex flex-column pb-4">
-    <!-- Top Navbar -->
-    <nav class="navbar navbar-dark bg-black border-bottom border-secondary border-opacity-50 sticky-top px-3">
-      <div class="container-fluid px-0">
-        <a class="navbar-brand d-flex align-items-center mb-0" href="#">
-          <span class="badge bg-primary me-2 px-2 py-1 fs-6">
-            <i class="bi bi-cpu-fill"></i>
+  <div class="min-vh-100 d-flex flex-column pb-5" style="background-color: #f8fafc;">
+    <!-- Top White Modern Navbar -->
+    <nav class="navbar navbar-light bg-white border-bottom sticky-top px-3 py-2 shadow-sm">
+      <div class="container-fluid px-0 px-lg-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-primary p-2 rounded-3 text-white">
+            <i class="bi bi-cpu-fill fs-5"></i>
           </span>
-          <span class="fw-bold fs-5">ESP32 IoT Simulator</span>
-          <span class="text-secondary small ms-2 d-none d-sm-inline">| Smart Aquaculture & Biofloc Edge Node</span>
-        </a>
+          <div>
+            <div class="fw-bold fs-5 text-dark lh-sm">
+              ESP32 IoT Edge Simulator
+            </div>
+            <div class="text-muted small" style="font-size: 0.75rem;">
+              Smart Biofloc Aquaculture • Pure Edge Receiver Node
+            </div>
+          </div>
+        </div>
 
         <div class="d-flex align-items-center gap-2">
-          <!-- Connection / Mode Badge -->
-          <div class="d-flex align-items-center px-2 py-1 rounded bg-dark border border-secondary" style="font-size: 0.8rem;">
-            <span class="led-indicator on-green me-2" style="width: 10px; height: 10px;"></span>
-            <span class="text-light me-2">
-              <strong v-if="mqttService.mode === 'dummy'">Virtual Broker (Dummy + Bus Sync)</strong>
-              <strong v-else>Real MQTT (WebSocket)</strong>
-            </span>
-            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
-              Active
-            </span>
+          <!-- Active Synchronization Badge -->
+          <div class="d-none d-md-flex align-items-center px-3 py-1 rounded-pill bg-light border" style="font-size: 0.8rem;">
+            <span class="led-indicator on-green me-2"></span>
+            <span class="text-secondary me-2">Server Sync:</span>
+            <strong class="text-dark">
+              {{ mqttService.mode === 'dummy' ? 'Cross-Tab Bus Active' : 'WebSocket MQTT Connected' }}
+            </strong>
           </div>
 
+          <!-- Open SAC Platform Dashboard Button -->
+          <a 
+            href="http://localhost:5173" 
+            target="_blank" 
+            class="btn btn-outline-primary btn-sm rounded-pill px-3"
+            title="Open Main Server Dashboard to trigger actions"
+          >
+            <i class="bi bi-box-arrow-up-right me-1"></i>Open SAC Dashboard
+          </a>
+
           <!-- Configuration Button -->
-          <button @click="showConfigModal = true" class="btn btn-outline-secondary btn-sm" title="Configure MQTT Broker & Device Node">
-            <i class="bi bi-gear-fill me-1"></i>Configure
+          <button @click="showConfigModal = true" class="btn btn-light btn-sm border rounded-pill px-3 text-secondary" title="MQTT & Device Configuration">
+            <i class="bi bi-gear-fill me-1"></i>Config
           </button>
         </div>
       </div>
@@ -57,32 +68,28 @@ onUnmounted(() => {
 
     <!-- Main Container Content -->
     <div class="container-fluid px-3 px-lg-4 mt-3 flex-grow-1">
-      <!-- Section 1: ESP32 Hardware + Telemetry Sensors -->
-      <div class="row g-3 mb-3">
-        <div class="col-lg-5 col-xl-4">
-          <Esp32Board />
+      <!-- Info Notice Header -->
+      <div class="alert alert-light border bg-white rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between shadow-sm">
+        <div class="d-flex align-items-center gap-2 small text-secondary">
+          <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+          <span>
+            <strong>Edge Node Listener Mode:</strong> This simulator operates strictly as a pond hardware receiver. 
+            All actuator operations (feeding, molasses injection, aerator booster, water exchange) are <strong>orchestrated from the SAC Main Server</strong> at <a href="http://localhost:5173" target="_blank" class="fw-semibold">localhost:5173</a>.
+          </span>
         </div>
-        <div class="col-lg-7 col-xl-8">
-          <TelemetryPanel />
-        </div>
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 small">
+          Slave Firmware v1.2
+        </span>
       </div>
 
-      <!-- Section 2: Actuators (Aerator, Feeder, Molasses, Water Change) -->
-      <div class="row g-3 mb-3">
-        <div class="col-12">
-          <ActuatorPanel />
-        </div>
-      </div>
+      <!-- Section 1: Top Status Cards (Hardware Identity & Water Telemetry) -->
+      <DeviceStatusCards />
 
-      <!-- Section 3: Mock Backend & MQTT Inspector -->
-      <div class="row g-3">
-        <div class="col-lg-5">
-          <BackendMockConsole />
-        </div>
-        <div class="col-lg-7">
-          <MqttLogViewer />
-        </div>
-      </div>
+      <!-- Section 2: Active Remote Operations Running Monitor (Visualisasi Action Berjalan) -->
+      <ActiveExecutionPanel />
+
+      <!-- Section 3: Telemetry Trendline & Server Traffic Packet Stream -->
+      <TelemetryTrafficStream />
     </div>
 
     <!-- Broker Configuration Modal -->
