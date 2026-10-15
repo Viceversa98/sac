@@ -9,13 +9,13 @@ class MqttService {
     this.messageLog = []
     this.config = {
       brokerUrl: 'ws://localhost:9001',
-      clientId: 'esp32_aqua_' + Math.random().toString(16).substring(2, 8),
+      clientId: 'esp32_aqua_cluster_' + Math.random().toString(16).substring(2, 8),
       deviceId: 'ESP32-AQUA-01',
       username: '',
       password: '',
-      telemetryTopic: 'esp32/ESP32-AQUA-01/telemetry',
-      commandTopic: 'esp32/ESP32-AQUA-01/commands',
-      eventTopic: 'esp32/ESP32-AQUA-01/events',
+      telemetryTopic: 'esp32/+/telemetry',
+      commandTopic: 'esp32/+/commands',
+      eventTopic: 'esp32/+/events',
     }
 
     // Modern cross-tab browser communication bridge
@@ -25,15 +25,19 @@ class MqttService {
         this.broadcastChannel = new BroadcastChannel('sac_telemetry_bus')
         this.broadcastChannel.onmessage = (event) => {
           if (event.data && event.data.type === 'COMMAND') {
-            const targetDev = event.data.deviceId
-            if (!targetDev || targetDev === this.config.deviceId) {
-              this.logTraffic('INCOMING (BROWSER_SYNC)', this.config.commandTopic, event.data.payload)
-              this.emit('message', {
-                topic: this.config.commandTopic,
-                payload: event.data.payload,
-                raw: JSON.stringify(event.data.payload)
-              })
+            const targetDev = event.data.deviceId || event.data.device_id || 'ESP32-AQUA-01'
+            const payload = event.data.payload || {
+              action: event.data.action || event.data.command,
+              params: event.data.params || {},
+              command_id: event.data.command_id || `cmd-${Date.now()}`
             }
+            this.logTraffic('INCOMING (SERVER_CMD)', `esp32/${targetDev}/commands`, payload)
+            this.emit('message', {
+              topic: `esp32/${targetDev}/commands`,
+              deviceId: targetDev,
+              payload: payload,
+              raw: JSON.stringify(payload)
+            })
           }
         }
       } catch (e) {
@@ -51,20 +55,15 @@ class MqttService {
 
   setConfig(newConfig) {
     this.config = { ...this.config, ...newConfig }
-    // Update topics if deviceId changed
-    this.config.telemetryTopic = `esp32/${this.config.deviceId}/telemetry`
-    this.config.commandTopic = `esp32/${this.config.deviceId}/commands`
-    this.config.eventTopic = `esp32/${this.config.deviceId}/events`
   }
 
   connect() {
     if (this.mode === 'dummy') {
-      // Simulate connection immediately in dummy mode
       setTimeout(() => {
         this.isConnected = true
         this.emit('connect', { mode: 'dummy' })
-        this.logTraffic('SYSTEM', 'DUMMY_BROKER', 'Connected to Virtual Internal Broker (Dummy Mode)')
-      }, 300)
+        this.logTraffic('SYSTEM', 'CLUSTER_BUS', 'Connected to Virtual Multi-Node Bus (Dummy Mode)')
+      }, 250)
       return
     }
 
@@ -85,9 +84,9 @@ class MqttService {
       this.client.on('connect', () => {
         this.isConnected = true
         this.emit('connect', { mode: 'real' })
-        this.logTraffic('SYSTEM', 'MQTT', `Successfully connected to broker ${this.config.brokerUrl}`)
-        // Auto-subscribe to commands topic
-        this.subscribe(this.config.commandTopic)
+        this.logTraffic('SYSTEM', 'MQTT', `Cluster connected to broker ${this.config.brokerUrl}`)
+        // Subscribe to all node commands wildcard
+        this.subscribe('esp32/+/commands')
       })
 
       this.client.on('message', (topic, payload) => {
@@ -98,8 +97,12 @@ class MqttService {
         } catch {
           parsed = messageStr
         }
+        // Extract deviceId from topic: esp32/{deviceId}/commands
+        const parts = topic.split('/')
+        const deviceId = parts[1] || 'ESP32-AQUA-01'
+
         this.logTraffic('INCOMING', topic, parsed)
-        this.emit('message', { topic, payload: parsed, raw: messageStr })
+        this.emit('message', { topic, deviceId, payload: parsed, raw: messageStr })
       })
 
       this.client.on('error', (err) => {
@@ -121,7 +124,7 @@ class MqttService {
     if (this.mode === 'dummy') {
       this.isConnected = false
       this.emit('offline')
-      this.logTraffic('SYSTEM', 'DUMMY_BROKER', 'Virtual Internal Broker stopped')
+      this.logTraffic('SYSTEM', 'CLUSTER_BUS', 'Virtual Bus stopped')
       return
     }
 
@@ -135,7 +138,7 @@ class MqttService {
 
   subscribe(topic) {
     if (this.mode === 'dummy') {
-      this.logTraffic('SYSTEM', 'SUBSCRIBE', `Subscribed to dummy topic: ${topic}`)
+      this.logTraffic('SYSTEM', 'SUBSCRIBE', `Subscribed to virtual topic: ${topic}`)
       return
     }
 
@@ -150,7 +153,7 @@ class MqttService {
     }
   }
 
-  publish(topic, payload) {
+  publish(topic, payload, deviceId = null) {
     const payloadStr = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2)
     let parsedData = null
     try {
@@ -158,6 +161,8 @@ class MqttService {
     } catch {
       parsedData = payload
     }
+
+    const devId = deviceId || (parsedData && parsedData.device_id) || 'ESP32-AQUA-01'
 
     this.logTraffic('OUTGOING', topic, parsedData)
 
@@ -167,7 +172,7 @@ class MqttService {
         const isTelemetry = topic.includes('/telemetry')
         this.broadcastChannel.postMessage({
           type: isTelemetry ? 'TELEMETRY' : 'EVENT',
-          deviceId: this.config.deviceId,
+          deviceId: devId,
           topic,
           payload: parsedData,
           timestamp: Date.now()
@@ -178,8 +183,7 @@ class MqttService {
     }
 
     if (this.mode === 'dummy') {
-      // In dummy mode, notify internal listeners
-      this.emit('published', { topic, payload: parsedData })
+      this.emit('published', { topic, payload: parsedData, deviceId: devId })
       return true
     }
 
@@ -187,32 +191,20 @@ class MqttService {
       this.client.publish(topic, payloadStr, { qos: 0 })
       return true
     } else {
-      this.logTraffic('WARN', topic, 'Publish failed: MQTT client is disconnected.')
       return false
     }
-  }
-
-  // Helper to simulate incoming backend command (useful for testing in dummy mode)
-  simulateIncomingCommand(commandPayload) {
-    const topic = this.config.commandTopic
-    this.logTraffic('INCOMING (MOCK BACKEND)', topic, commandPayload)
-    this.emit('message', {
-      topic,
-      payload: commandPayload,
-      raw: JSON.stringify(commandPayload)
-    })
   }
 
   logTraffic(type, source, data) {
     const entry = {
       id: Date.now() + Math.random().toString(16).substring(2, 6),
       timestamp: new Date().toLocaleTimeString(),
-      type, // 'SYSTEM' | 'INCOMING' | 'OUTGOING' | 'ERROR' | 'WARN'
+      type,
       source,
       data
     }
     this.messageLog.unshift(entry)
-    if (this.messageLog.length > 100) {
+    if (this.messageLog.length > 50) {
       this.messageLog.pop()
     }
     this.emit('log', entry)

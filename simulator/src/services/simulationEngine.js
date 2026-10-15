@@ -1,291 +1,259 @@
 import { reactive } from 'vue'
 import { mqttService } from './mqttService'
 
-export const DEVICE_PROFILES = [
-  { id: 'ESP32-AQUA-01', name: 'Pond K01 - Biofloc Intensive (Tilapia)', pondId: 'K01' },
-  { id: 'ESP32-AQUA-02', name: 'Pond K02 - Nursery Alpha (Fingerlings)', pondId: 'K02' },
-  { id: 'ESP32-AQUA-03', name: 'Pond K03 - Broodstock Center', pondId: 'K03' },
-  { id: 'ESP32-AQUA-04', name: 'Pond K04 - Treatment / Quarantine', pondId: 'K04' },
-]
+function createNodeState(id, name, pondId, overrides = {}) {
+  return {
+    id,
+    deviceId: id,
+    name,
+    pondId,
+    ph: overrides.ph || 7.20,
+    temperature: overrides.temperature || 28.5,
+    ammonia: overrides.ammonia || 0.22,
+    mudSolids: overrides.mudSolids || 95.0,
+    dissolvedOxygen: overrides.dissolvedOxygen || 6.40,
+    uptimeSeconds: 0,
+    batteryVoltage: +(4.15 + (Math.random() * 0.05)).toFixed(2),
+    wifiRssi: -60 - Math.floor(Math.random() * 10),
+    freeHeap: 185000 + Math.floor(Math.random() * 5000),
+    isPublishing: false,
+    aerator: {
+      state: overrides.aeratorState || 'running',
+      powerPercent: overrides.aeratorPower || 100,
+      lastTriggered: null,
+    },
+    feeder: {
+      state: 'idle',
+      dose: 0,
+      progress: 0,
+      totalToday: overrides.feedToday || 0,
+      lastTriggered: null,
+    },
+    molassesPump: {
+      state: 'idle',
+      dose: 0,
+      progress: 0,
+      totalToday: overrides.molassesToday || 0,
+      lastTriggered: null,
+    },
+    waterChange: {
+      state: 'idle',
+      volume: 0,
+      progress: 0,
+      totalToday: overrides.waterToday || 0,
+      phase: '',
+      lastTriggered: null,
+    },
+    leds: {
+      pwr: true,
+      wifi: true,
+      mqttTx: false,
+      actAerator: overrides.aeratorState !== 'idle',
+      actFeeder: false,
+      actMolasses: false,
+      actWater: false,
+    }
+  }
+}
 
-export const pondState = reactive({
-  // Sensors
-  ph: 7.20,
-  temperature: 28.5,
-  ammonia: 0.22,
-  mudSolids: 95.0, // Total suspended solids / turbidity (mg/L / NTU)
-  dissolvedOxygen: 6.40, // DO (mg/L)
-  
-  // Settings
-  autoDrift: true,
-  publishInterval: 5, // seconds
+export const nodes = reactive([
+  createNodeState('ESP32-AQUA-01', 'Pond K01 - Biofloc Intensive', 'K01', {
+    dissolvedOxygen: 6.40,
+    ammonia: 0.22,
+    ph: 7.20,
+    temperature: 28.5,
+    mudSolids: 95.0,
+    aeratorState: 'running',
+    aeratorPower: 100,
+    feedToday: 240,
+    molassesToday: 120
+  }),
+  createNodeState('ESP32-AQUA-02', 'Pond K02 - Nursery Alpha', 'K02', {
+    dissolvedOxygen: 6.85,
+    ammonia: 0.15,
+    ph: 7.35,
+    temperature: 28.8,
+    mudSolids: 65.0,
+    aeratorState: 'running',
+    aeratorPower: 85,
+    feedToday: 160,
+    molassesToday: 60
+  }),
+  createNodeState('ESP32-AQUA-03', 'Pond K03 - Broodstock Center', 'K03', {
+    dissolvedOxygen: 5.90,
+    ammonia: 0.38,
+    ph: 7.10,
+    temperature: 27.9,
+    mudSolids: 110.0,
+    aeratorState: 'running',
+    aeratorPower: 100,
+    feedToday: 300,
+    molassesToday: 150
+  }),
+  createNodeState('ESP32-AQUA-04', 'Pond K04 - Treatment / Quarantine', 'K04', {
+    dissolvedOxygen: 4.80,
+    ammonia: 0.65,
+    ph: 6.95,
+    temperature: 28.1,
+    mudSolids: 145.0,
+    aeratorState: 'running',
+    aeratorPower: 100,
+    feedToday: 80,
+    molassesToday: 90
+  }),
+])
+
+export const pondState = nodes[0]
+
+export const clusterState = reactive({
+  publishInterval: 5,
   nextPublishCountdown: 5,
-  isPublishing: false,
-
-  // Device Stats
-  deviceId: 'ESP32-AQUA-01',
-  uptimeSeconds: 0,
-  batteryVoltage: 4.15,
-  wifiRssi: -64,
-  freeHeap: 185420,
-
-  // Actuator States
-  aerator: {
-    state: 'running', // 'running' | 'idle'
-    powerPercent: 100, // 0 - 100%
-    mode: 'continuous',
-    lastTriggered: null,
-  },
-  feeder: {
-    state: 'idle', // 'idle' | 'running'
-    dose: 0, // grams
-    progress: 0,
-    totalToday: 0,
-    lastTriggered: null,
-  },
-  molassesPump: {
-    state: 'idle', // 'idle' | 'running'
-    dose: 0, // ml
-    progress: 0,
-    totalToday: 0,
-    lastTriggered: null,
-  },
-  waterChange: {
-    state: 'idle', // 'idle' | 'draining' | 'refilling'
-    volume: 0, // liter
-    progress: 0,
-    totalToday: 0,
-    phase: '', // 'Drain' | 'Refill'
-    lastTriggered: null,
-  },
-
-  // LED and activity indicators
-  leds: {
-    pwr: true,
-    wifi: true,
-    mqttTx: false,
-    actAerator: true,
-    actFeeder: false,
-    actMolasses: false,
-    actWater: false,
-  },
-
-  // Rolling Telemetry History (for trend curves & sparklines)
-  telemetryHistory: [
-    { time: '10:00', do: 6.2, ph: 7.15, temp: 28.2, ammonia: 0.25, mud: 90 },
-    { time: '10:01', do: 6.3, ph: 7.18, temp: 28.3, ammonia: 0.24, mud: 92 },
-    { time: '10:02', do: 6.35, ph: 7.20, temp: 28.4, ammonia: 0.23, mud: 94 },
-    { time: '10:03', do: 6.40, ph: 7.20, temp: 28.5, ammonia: 0.22, mud: 95 },
-  ],
-
-  // OLED Screen Log Buffer (Virtual Screen)
-  oledLines: [
-    'ESP32 POND v1.2',
-    'WiFi: CONNECTED',
-    'MQTT: READY',
-    'AERATOR: ACTIVE 100%',
-  ],
+  isLive: true,
 })
 
 class SimulationEngine {
   constructor() {
-    this.telemetryTimer = null
     this.countdownTimer = null
     this.uptimeTimer = null
     this.driftTimer = null
   }
 
   start() {
-    // Start MQTT service
     mqttService.connect()
 
-    // Listen to incoming commands from MQTT or Browser Sync
-    mqttService.on('message', ({ topic, payload }) => {
-      this.handleIncomingCommand(payload)
+    // Listen to incoming commands from MQTT or Browser Sync Bus
+    mqttService.on('message', ({ topic, deviceId, payload }) => {
+      this.handleIncomingCommand(payload, deviceId)
     })
 
-    // Uptime & device metrics counter
+    // Uptime & diagnostic counter for all nodes
     this.uptimeTimer = setInterval(() => {
-      pondState.uptimeSeconds++
-      // Subtle fluctuations in RSSI and battery
-      if (pondState.uptimeSeconds % 10 === 0) {
-        pondState.wifiRssi = -60 - Math.floor(Math.random() * 8)
-        pondState.batteryVoltage = +(4.18 - (pondState.uptimeSeconds / 100000)).toFixed(2)
-      }
+      nodes.forEach(node => {
+        node.uptimeSeconds++
+        if (node.uptimeSeconds % 12 === 0) {
+          node.wifiRssi = -58 - Math.floor(Math.random() * 8)
+          node.batteryVoltage = +(4.18 - (node.uptimeSeconds / 120000)).toFixed(2)
+        }
+      })
     }, 1000)
 
-    // Countdown and Telemetry Dispatcher
+    // Countdown and Telemetry Dispatcher for all nodes
     this.startTelemetryLoop()
 
-    // Natural pond parameter drift & biological simulation
+    // Natural pond parameter drift & biological model for all 4 nodes
     this.driftTimer = setInterval(() => {
-      if (pondState.autoDrift) {
-        this.applyNaturalDrift()
-      }
+      this.applyNaturalDriftAll()
     }, 3000)
-
-    this.updateOled('MQTT CONNECTED', 'SYSTEM RUNNING')
   }
 
   stop() {
-    if (this.telemetryTimer) clearInterval(this.telemetryTimer)
     if (this.countdownTimer) clearInterval(this.countdownTimer)
     if (this.uptimeTimer) clearInterval(this.uptimeTimer)
     if (this.driftTimer) clearInterval(this.driftTimer)
   }
 
-  setDeviceProfile(profileId) {
-    const prof = DEVICE_PROFILES.find(p => p.id === profileId)
-    if (!prof) return
-    pondState.deviceId = prof.id
-    mqttService.setConfig({ deviceId: prof.id })
-    this.updateOled(`NODE: ${prof.pondId}`, prof.name.substring(0, 16))
-    this.publishEvent('NODE_PROFILE_CHANGED', {
-      deviceId: prof.id,
-      pondId: prof.pondId,
-      name: prof.name
-    })
-  }
-
   startTelemetryLoop() {
     if (this.countdownTimer) clearInterval(this.countdownTimer)
-    pondState.nextPublishCountdown = pondState.publishInterval
+    clusterState.nextPublishCountdown = clusterState.publishInterval
 
     this.countdownTimer = setInterval(() => {
-      if (pondState.nextPublishCountdown > 1) {
-        pondState.nextPublishCountdown--
+      if (clusterState.nextPublishCountdown > 1) {
+        clusterState.nextPublishCountdown--
       } else {
-        pondState.nextPublishCountdown = pondState.publishInterval
-        this.publishTelemetry()
+        clusterState.nextPublishCountdown = clusterState.publishInterval
+        this.publishTelemetryAll()
       }
     }, 1000)
   }
 
-  setPublishInterval(newInterval) {
-    pondState.publishInterval = Math.max(1, Math.min(60, Number(newInterval) || 5))
-    this.startTelemetryLoop()
-  }
-
-  publishTelemetry() {
-    // Flash MQTT TX LED
-    pondState.leds.mqttTx = true
-    pondState.isPublishing = true
-    setTimeout(() => {
-      pondState.leds.mqttTx = false
-      pondState.isPublishing = false
-    }, 350)
-
+  publishTelemetryAll() {
     const now = new Date()
-    const timeLabel = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    nodes.forEach(node => {
+      // Flash MQTT TX LED
+      node.leds.mqttTx = true
+      node.isPublishing = true
+      setTimeout(() => {
+        node.leds.mqttTx = false
+        node.isPublishing = false
+      }, 350)
 
-    // Append to rolling history
-    pondState.telemetryHistory.push({
-      time: timeLabel,
-      do: pondState.dissolvedOxygen,
-      ph: pondState.ph,
-      temp: pondState.temperature,
-      ammonia: pondState.ammonia,
-      mud: pondState.mudSolids
-    })
-    if (pondState.telemetryHistory.length > 25) {
-      pondState.telemetryHistory.shift()
-    }
-
-    const matchedProfile = DEVICE_PROFILES.find(p => p.id === pondState.deviceId)
-
-    // Standard telemetry packet format
-    const telemetryPayload = {
-      device_id: pondState.deviceId,
-      pond_id: matchedProfile ? matchedProfile.pondId : 'K01',
-      timestamp: now.toISOString(),
-      uptime_seconds: pondState.uptimeSeconds,
-      system: {
-        battery_v: pondState.batteryVoltage,
-        wifi_rssi_dbm: pondState.wifiRssi,
-        free_heap_bytes: pondState.freeHeap,
-      },
-      sensors: {
-        ph: pondState.ph,
-        temperature_c: pondState.temperature,
-        dissolved_oxygen_mg_l: pondState.dissolvedOxygen,
-        ammonia_mg_l: pondState.ammonia,
-        mud_solids_mg_l: pondState.mudSolids,
-      },
-      actuators: {
-        aerator: {
-          state: pondState.aerator.state,
-          power_percent: pondState.aerator.powerPercent
+      const telemetryPayload = {
+        device_id: node.id,
+        pond_id: node.pondId,
+        timestamp: now.toISOString(),
+        uptime_seconds: node.uptimeSeconds,
+        system: {
+          battery_v: node.batteryVoltage,
+          wifi_rssi_dbm: node.wifiRssi,
+          free_heap_bytes: node.freeHeap,
         },
-        feeder: {
-          state: pondState.feeder.state,
-          total_today_grams: pondState.feeder.totalToday
+        sensors: {
+          ph: node.ph,
+          temperature_c: node.temperature,
+          dissolved_oxygen_mg_l: node.dissolvedOxygen,
+          ammonia_mg_l: node.ammonia,
+          mud_solids_mg_l: node.mudSolids,
         },
-        molasses_pump: {
-          state: pondState.molassesPump.state,
-          total_today_ml: pondState.molassesPump.totalToday
-        },
-        water_change: {
-          state: pondState.waterChange.state,
-          total_today_liters: pondState.waterChange.totalToday
+        actuators: {
+          aerator: {
+            state: node.aerator.state,
+            power_percent: node.aerator.powerPercent
+          },
+          feeder: {
+            state: node.feeder.state,
+            total_today_grams: node.feeder.totalToday
+          },
+          molasses_pump: {
+            state: node.molassesPump.state,
+            total_today_ml: node.molassesPump.totalToday
+          },
+          water_change: {
+            state: node.waterChange.state,
+            total_today_liters: node.waterChange.totalToday
+          }
         }
       }
-    }
 
-    mqttService.publish(mqttService.config.telemetryTopic, telemetryPayload)
-
-    // Update OLED Display buffer
-    this.updateOled(
-      `DO:${pondState.dissolvedOxygen.toFixed(2)} pH:${pondState.ph.toFixed(2)}`,
-      `NH3:${pondState.ammonia.toFixed(2)} T:${pondState.temperature.toFixed(1)}C`,
-      `TX OK [${timeLabel}]`
-    )
+      mqttService.publish(`esp32/${node.id}/telemetry`, telemetryPayload, node.id)
+    })
   }
 
-  publishEvent(eventType, eventData) {
-    const payload = {
-      device_id: pondState.deviceId,
-      event: eventType,
-      timestamp: new Date().toISOString(),
-      data: eventData
-    }
-    mqttService.publish(mqttService.config.eventTopic, payload)
-  }
-
-  applyNaturalDrift() {
-    // Biological DO Dynamics based on Aeration state:
-    let dDo = 0
-    if (pondState.aerator.state === 'running') {
-      const aeratorFactor = (pondState.aerator.powerPercent || 100) / 100
-      if (pondState.dissolvedOxygen < 7.2) {
-        // Active aeration drives oxygen up towards saturation
-        dDo = (0.04 + Math.random() * 0.05) * aeratorFactor
+  applyNaturalDriftAll() {
+    nodes.forEach(node => {
+      // Biological DO Dynamics based on Aerator state:
+      let dDo = 0
+      if (node.aerator.state === 'running') {
+        const aeratorFactor = (node.aerator.powerPercent || 100) / 100
+        if (node.dissolvedOxygen < 7.2) {
+          dDo = (0.03 + Math.random() * 0.04) * aeratorFactor
+        } else {
+          dDo = (Math.random() - 0.5) * 0.02
+        }
       } else {
-        dDo = (Math.random() - 0.5) * 0.02
+        // Hypoxia drift: oxygen decay without aeration
+        dDo = -(0.03 + Math.random() * 0.035)
       }
-    } else {
-      // Hypoxia drift: microbial & fish respiration consumes oxygen without replenishment
-      dDo = -(0.03 + Math.random() * 0.04)
-    }
 
-    const dPh = (Math.random() - 0.5) * 0.02
-    const dTemp = (Math.random() - 0.5) * 0.04
-    // Natural biological digestion adds slight baseline ammonia
-    const dAmmonia = (Math.random() - 0.47) * 0.008
-    const dMud = (Math.random() - 0.5) * 0.4
+      const dPh = (Math.random() - 0.5) * 0.015
+      const dTemp = (Math.random() - 0.5) * 0.03
+      const dAmmonia = (Math.random() - 0.47) * 0.006
+      const dMud = (Math.random() - 0.5) * 0.35
 
-    pondState.ph = Math.min(9.0, Math.max(6.0, +(pondState.ph + dPh).toFixed(2)))
-    pondState.temperature = Math.min(34.0, Math.max(22.0, +(pondState.temperature + dTemp).toFixed(1)))
-    pondState.ammonia = Math.min(3.0, Math.max(0.01, +(pondState.ammonia + dAmmonia).toFixed(3)))
-    pondState.mudSolids = Math.min(500.0, Math.max(20.0, +(pondState.mudSolids + dMud).toFixed(1)))
-    pondState.dissolvedOxygen = Math.min(10.0, Math.max(1.0, +(pondState.dissolvedOxygen + dDo).toFixed(2)))
+      node.ph = Math.min(8.8, Math.max(6.2, +(node.ph + dPh).toFixed(2)))
+      node.temperature = Math.min(33.0, Math.max(24.0, +(node.temperature + dTemp).toFixed(1)))
+      node.ammonia = Math.min(2.5, Math.max(0.01, +(node.ammonia + dAmmonia).toFixed(3)))
+      node.mudSolids = Math.min(450.0, Math.max(25.0, +(node.mudSolids + dMud).toFixed(1)))
+      node.dissolvedOxygen = Math.min(9.5, Math.max(1.5, +(node.dissolvedOxygen + dDo).toFixed(2)))
+    })
   }
 
-  // --- ACTUATOR HANDLERS ---
+  handleIncomingCommand(payload, targetDevId) {
+    if (!payload || typeof payload !== 'object') return
 
-  handleIncomingCommand(payload) {
-    if (!payload || typeof payload !== 'object') {
-      console.warn('Invalid command payload format:', payload)
-      return
+    // Find targeted node
+    let targetNode = nodes.find(n => n.id === targetDevId || n.id === payload.device_id || n.pondId === payload.pond_id)
+    if (!targetNode) {
+      targetNode = nodes[0] // fallback to first node
     }
 
     const action = (payload.action || payload.command || '').toLowerCase()
@@ -297,6 +265,7 @@ class SimulationEngine {
       case 'paddlewheel':
       case 'blower':
         this.executeAerator(
+          targetNode,
           params.state !== false && params.state !== 'off' && params.state !== 'idle',
           params.powerPercent || params.power || 100,
           payload.command_id
@@ -306,271 +275,165 @@ class SimulationEngine {
       case 'feed':
       case 'feeder':
       case 'pakan':
-        this.executeFeed(params.dose || params.amount || 50, params.unit || 'g', payload.command_id)
+        this.executeFeed(targetNode, params.dose || params.amount || 50, params.unit || 'g', payload.command_id)
         break
 
       case 'pump_molasses':
       case 'molasses':
       case 'molase':
-        this.executeMolasses(params.dose || params.amount || 100, params.unit || 'ml', payload.command_id)
+        this.executeMolasses(targetNode, params.dose || params.amount || 100, params.unit || 'ml', payload.command_id)
         break
 
       case 'water_change':
       case 'ganti_air':
       case 'drain_refill':
-        this.executeWaterChange(params.volume || params.dose || 200, params.unit || 'liter', payload.command_id)
+        this.executeWaterChange(targetNode, params.volume || params.dose || 200, params.unit || 'liter', payload.command_id)
         break
 
       default:
-        console.warn('Unknown command action:', action)
-        this.publishEvent('COMMAND_UNKNOWN', {
-          action,
-          message: 'Command action unrecognized by ESP32 firmware',
-        })
+        console.warn('Unknown command action for node', targetNode.id, action)
         break
     }
   }
 
-  executeAerator(enable = true, powerPercent = 100, commandId = null) {
-    pondState.aerator.state = enable ? 'running' : 'idle'
-    pondState.aerator.powerPercent = enable ? Math.min(100, Math.max(25, Number(powerPercent) || 100)) : 0
-    pondState.aerator.lastTriggered = new Date().toLocaleTimeString()
-    pondState.leds.actAerator = enable
+  executeAerator(node, enable = true, powerPercent = 100, commandId = null) {
+    node.aerator.state = enable ? 'running' : 'idle'
+    node.aerator.powerPercent = enable ? Math.min(100, Math.max(25, Number(powerPercent) || 100)) : 0
+    node.aerator.lastTriggered = new Date().toLocaleTimeString()
+    node.leds.actAerator = enable
 
-    this.publishEvent(enable ? 'AERATOR_STARTED' : 'AERATOR_STOPPED', {
-      command_id: commandId,
-      state: pondState.aerator.state,
-      powerPercent: pondState.aerator.powerPercent,
-      timestamp: Date.now()
-    })
-
-    this.updateOled(
-      enable ? `AERATOR ${pondState.aerator.powerPercent}%` : 'AERATOR OFF',
-      `DO: ${pondState.dissolvedOxygen.toFixed(2)} mg/L`
-    )
+    mqttService.publish(`esp32/${node.id}/events`, {
+      device_id: node.id,
+      event: enable ? 'AERATOR_STARTED' : 'AERATOR_STOPPED',
+      data: { command_id: commandId, state: node.aerator.state, powerPercent: node.aerator.powerPercent }
+    }, node.id)
   }
 
-  executeFeed(dose, unit = 'g', commandId = null) {
-    if (pondState.feeder.state === 'running') {
-      this.publishEvent('FEEDER_BUSY', { message: 'Feeder is busy dispensing, command ignored' })
-      return
-    }
+  executeFeed(node, dose, unit = 'g', commandId = null) {
+    if (node.feeder.state === 'running') return
 
-    pondState.feeder.state = 'running'
-    pondState.feeder.dose = dose
-    pondState.feeder.progress = 0
-    pondState.feeder.lastTriggered = new Date().toLocaleTimeString()
-    pondState.leds.actFeeder = true
+    node.feeder.state = 'running'
+    node.feeder.dose = dose
+    node.feeder.progress = 0
+    node.feeder.lastTriggered = new Date().toLocaleTimeString()
+    node.leds.actFeeder = true
 
-    this.publishEvent('FEED_STARTED', {
-      command_id: commandId,
-      dose,
-      unit,
-      timestamp: Date.now()
-    })
+    mqttService.publish(`esp32/${node.id}/events`, {
+      device_id: node.id,
+      event: 'FEED_STARTED',
+      data: { command_id: commandId, dose, unit }
+    }, node.id)
 
-    this.updateOled(`FEEDING: ${dose}${unit}`, 'DISPENSING...')
-
-    const durationSec = Math.min(15, Math.max(3, Math.round(dose / 20)))
-    const stepInterval = (durationSec * 1000) / 100
+    const durationSec = Math.min(12, Math.max(3, Math.round(dose / 25)))
+    const stepInterval = (durationSec * 1000) / 50
 
     let currentProgress = 0
     const feedInterval = setInterval(() => {
       currentProgress += 2
-      pondState.feeder.progress = Math.min(100, currentProgress)
+      node.feeder.progress = Math.min(100, currentProgress)
 
       if (currentProgress >= 100) {
         clearInterval(feedInterval)
-        pondState.feeder.state = 'idle'
-        pondState.feeder.progress = 100
-        pondState.feeder.totalToday += Number(dose)
-        pondState.leds.actFeeder = false
+        node.feeder.state = 'idle'
+        node.feeder.progress = 100
+        node.feeder.totalToday += Number(dose)
+        node.leds.actFeeder = false
 
-        // Biological side effect: Fish feeding increases ammonia slightly after some time
         setTimeout(() => {
-          pondState.ammonia = +(pondState.ammonia + 0.05).toFixed(3)
-        }, 4000)
+          node.ammonia = +(node.ammonia + 0.04).toFixed(3)
+        }, 3000)
 
-        this.publishEvent('FEED_COMPLETED', {
-          command_id: commandId,
-          dose_delivered: dose,
-          unit,
-          total_today: pondState.feeder.totalToday
-        })
-
-        this.updateOled(`FEED DONE: ${dose}${unit}`, 'MOTOR IDLE')
+        mqttService.publish(`esp32/${node.id}/events`, {
+          device_id: node.id,
+          event: 'FEED_COMPLETED',
+          data: { command_id: commandId, total_today: node.feeder.totalToday }
+        }, node.id)
       }
     }, stepInterval)
   }
 
-  executeMolasses(dose, unit = 'ml', commandId = null) {
-    if (pondState.molassesPump.state === 'running') {
-      this.publishEvent('MOLASSES_BUSY', { message: 'Molasses pump busy dispensing' })
-      return
-    }
+  executeMolasses(node, dose, unit = 'ml', commandId = null) {
+    if (node.molassesPump.state === 'running') return
 
-    pondState.molassesPump.state = 'running'
-    pondState.molassesPump.dose = dose
-    pondState.molassesPump.progress = 0
-    pondState.molassesPump.lastTriggered = new Date().toLocaleTimeString()
-    pondState.leds.actMolasses = true
+    node.molassesPump.state = 'running'
+    node.molassesPump.dose = dose
+    node.molassesPump.progress = 0
+    node.molassesPump.lastTriggered = new Date().toLocaleTimeString()
+    node.leds.actMolasses = true
 
-    this.publishEvent('MOLASSES_STARTED', {
-      command_id: commandId,
-      dose,
-      unit,
-      timestamp: Date.now()
-    })
+    mqttService.publish(`esp32/${node.id}/events`, {
+      device_id: node.id,
+      event: 'MOLASSES_STARTED',
+      data: { command_id: commandId, dose, unit }
+    }, node.id)
 
-    this.updateOled(`MOLASSES: ${dose}${unit}`, 'PUMPING DOSAGE...')
-
-    const durationSec = Math.min(20, Math.max(4, Math.round(dose / 20)))
-    const stepInterval = (durationSec * 1000) / 100
+    const durationSec = Math.min(15, Math.max(4, Math.round(dose / 20)))
+    const stepInterval = (durationSec * 1000) / 50
 
     let currentProgress = 0
     const pumpInterval = setInterval(() => {
       currentProgress += 2
-      pondState.molassesPump.progress = Math.min(100, currentProgress)
+      node.molassesPump.progress = Math.min(100, currentProgress)
 
-      // Gradual biological improvement: Molasses feeds probiotic bacteria which consumes ammonia
-      if (currentProgress % 20 === 0 && pondState.ammonia > 0.05) {
-        pondState.ammonia = +(Math.max(0.02, pondState.ammonia - 0.02)).toFixed(3)
+      if (currentProgress % 20 === 0 && node.ammonia > 0.05) {
+        node.ammonia = +(Math.max(0.02, node.ammonia - 0.02)).toFixed(3)
       }
 
       if (currentProgress >= 100) {
         clearInterval(pumpInterval)
-        pondState.molassesPump.state = 'idle'
-        pondState.molassesPump.progress = 100
-        pondState.molassesPump.totalToday += Number(dose)
-        pondState.leds.actMolasses = false
+        node.molassesPump.state = 'idle'
+        node.molassesPump.progress = 100
+        node.molassesPump.totalToday += Number(dose)
+        node.leds.actMolasses = false
 
-        this.publishEvent('MOLASSES_COMPLETED', {
-          command_id: commandId,
-          dose_delivered: dose,
-          unit,
-          total_today: pondState.molassesPump.totalToday
-        })
-
-        this.updateOled(`MOLASSE DONE: ${dose}${unit}`, 'PROBIOTIC BOOSTED')
+        mqttService.publish(`esp32/${node.id}/events`, {
+          device_id: node.id,
+          event: 'MOLASSES_COMPLETED',
+          data: { command_id: commandId, total_today: node.molassesPump.totalToday }
+        }, node.id)
       }
     }, stepInterval)
   }
 
-  executeWaterChange(volume, unit = 'liter', commandId = null) {
-    if (pondState.waterChange.state !== 'idle') {
-      this.publishEvent('WATER_CHANGE_BUSY', { message: 'Water change cycle is currently in progress' })
-      return
-    }
+  executeWaterChange(node, volume, unit = 'liter', commandId = null) {
+    if (node.waterChange.state !== 'idle') return
 
-    pondState.waterChange.state = 'draining'
-    pondState.waterChange.volume = volume
-    pondState.waterChange.progress = 0
-    pondState.waterChange.phase = 'Drain Sludge'
-    pondState.waterChange.lastTriggered = new Date().toLocaleTimeString()
-    pondState.leds.actWater = true
+    node.waterChange.state = 'draining'
+    node.waterChange.volume = volume
+    node.waterChange.progress = 0
+    node.waterChange.phase = 'Drain Sludge'
+    node.waterChange.lastTriggered = new Date().toLocaleTimeString()
+    node.leds.actWater = true
 
-    this.publishEvent('WATER_CHANGE_STARTED', {
-      command_id: commandId,
-      volume,
-      unit,
-      timestamp: Date.now()
-    })
-
-    this.updateOled(`WATER CHG: ${volume}L`, 'PHASE 1: DRAIN')
-
-    const totalDurationSec = Math.min(30, Math.max(8, Math.round(volume / 25)))
-    const stepInterval = (totalDurationSec * 1000) / 100
+    const totalDurationSec = Math.min(20, Math.max(6, Math.round(volume / 30)))
+    const stepInterval = (totalDurationSec * 1000) / 50
 
     let currentProgress = 0
     const wcInterval = setInterval(() => {
       currentProgress += 2
-      pondState.waterChange.progress = Math.min(100, currentProgress)
+      node.waterChange.progress = Math.min(100, currentProgress)
 
       if (currentProgress === 50) {
-        pondState.waterChange.state = 'refilling'
-        pondState.waterChange.phase = 'Fresh Refill'
-        this.updateOled(`WATER CHG: ${volume}L`, 'PHASE 2: REFILL')
+        node.waterChange.state = 'refilling'
+        node.waterChange.phase = 'Refill Water'
       }
 
       if (currentProgress <= 50) {
-        // While draining, mud is being drawn out
-        pondState.mudSolids = +(Math.max(30.0, pondState.mudSolids - 1.5)).toFixed(1)
+        node.mudSolids = +(Math.max(25.0, node.mudSolids - 1.8)).toFixed(1)
       } else {
-        // While refilling fresh aerated water: DO goes up, ammonia diluted, pH normalized
-        pondState.dissolvedOxygen = +(Math.min(7.5, pondState.dissolvedOxygen + 0.05)).toFixed(2)
-        pondState.ammonia = +(Math.max(0.05, pondState.ammonia - 0.03)).toFixed(3)
-        pondState.ph = +(7.2 + (pondState.ph - 7.2) * 0.95).toFixed(2)
+        node.dissolvedOxygen = +(Math.min(7.5, node.dissolvedOxygen + 0.06)).toFixed(2)
+        node.ammonia = +(Math.max(0.05, node.ammonia - 0.03)).toFixed(3)
       }
 
       if (currentProgress >= 100) {
         clearInterval(wcInterval)
-        pondState.waterChange.state = 'idle'
-        pondState.waterChange.phase = 'Complete'
-        pondState.waterChange.progress = 100
-        pondState.waterChange.totalToday += Number(volume)
-        pondState.leds.actWater = false
-
-        this.publishEvent('WATER_CHANGE_COMPLETED', {
-          command_id: commandId,
-          volume_exchanged: volume,
-          unit,
-          total_today: pondState.waterChange.totalToday
-        })
-
-        this.updateOled(`CYCLE FINISHED`, `EXCH: ${volume}L OK`)
+        node.waterChange.state = 'idle'
+        node.waterChange.phase = 'Complete'
+        node.waterChange.progress = 100
+        node.waterChange.totalToday += Number(volume)
+        node.leds.actWater = false
       }
     }, stepInterval)
-  }
-
-  updateOled(line1, line2, line3 = null) {
-    const lines = [
-      `DEV: ${pondState.deviceId}`,
-      line1,
-      line2,
-      line3 || `UP: ${pondState.uptimeSeconds}s`
-    ]
-    pondState.oledLines = lines
-  }
-
-  // Pre-configured Scenarios for easy testing
-  setScenario(scenarioName) {
-    switch (scenarioName) {
-      case 'normal':
-        pondState.ph = 7.35
-        pondState.temperature = 28.2
-        pondState.ammonia = 0.12
-        pondState.mudSolids = 80.0
-        pondState.dissolvedOxygen = 6.5
-        pondState.aerator.state = 'running'
-        pondState.aerator.powerPercent = 100
-        pondState.leds.actAerator = true
-        break
-      case 'ammonia_spike':
-        pondState.ph = 7.9
-        pondState.temperature = 30.5
-        pondState.ammonia = 1.45 // CRITICAL
-        pondState.mudSolids = 180.0
-        pondState.dissolvedOxygen = 4.2
-        break
-      case 'low_oxygen':
-        pondState.ph = 6.8
-        pondState.temperature = 26.5
-        pondState.ammonia = 0.45
-        pondState.mudSolids = 120.0
-        pondState.dissolvedOxygen = 2.4 // CRITICAL
-        pondState.aerator.state = 'idle'
-        pondState.aerator.powerPercent = 0
-        pondState.leds.actAerator = false
-        break
-      case 'heavy_mud':
-        pondState.ph = 7.1
-        pondState.temperature = 28.0
-        pondState.ammonia = 0.85
-        pondState.mudSolids = 350.0 // Heavy turbidity / sludge accumulation
-        pondState.dissolvedOxygen = 3.8
-        break
-    }
-    this.publishTelemetry()
   }
 }
 
