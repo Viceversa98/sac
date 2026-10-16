@@ -1,14 +1,13 @@
 {
   "name": "sac-platform",
   "version": "1.0.0",
-  "description": "Sampay Aquaculture Co-Pilot (SAC) Platform — Monorepo (Frontend, Simulator, Backend)",
+  "description": "Sampay Aquaculture Co-Pilot — Vue app in web/ and Hono API in api/",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix frontend run dev",
-    "dev:frontend": "npm --prefix frontend run dev",
-    "dev:simulator": "npm --prefix simulator run dev",
-    "dev:backend": "npm --prefix backend run dev",
-    "build:frontend": "npm --prefix frontend run build",
-    "build:simulator": "npm --prefix simulator run build"
+    "dev:web": "npm --prefix web run dev",
+    "dev:api": "npm --prefix api run dev",
+    "build:web": "npm --prefix web run build",
+    "build:api": "npm --prefix api run build",
+    "test:api": "npm --prefix api test"
   }
 }
