@@ -1,0 +1,23 @@
+case_id,input,check_type,pond_id,param_or_tool,expected_value,expected_status,rule_or_citation,notes
+GT01,briefing over 24h replay,fact,A,do_mgL_min,2.4,BAHAYA,DO_TARGET_MIN (SDSU FS963-02 2010: >3 mg/L),min at 2026-10-15 04:00 WIB
+GT02,briefing over 24h replay,fact,A,do_below_3_window,02:15-05:30 WIB,BAHAYA,DO_TARGET_MIN,first and last reading <=3 mg/L
+GT03,briefing over 24h replay,fact,A,do_mgL_last,3.1,PERHATIAN,DO_TARGET_MIN,recovering but near limit at 05:45 WIB (policy: <=3.5 can be PERHATIAN or OK; either accepted)
+GT04,briefing over 24h replay,fact,A,ph_range,7.45-7.75,OK,PH_RANGE 7-9 (SDSU FS963-02),
+GT05,briefing over 24h replay,fact,A,temp_c_range,27.2-28.4,OK,TEMP_RANGE 22-29 C (SDSU FS963-02),
+GT06,briefing over 24h replay,fact,A,nh3_mgL_last,0.02,OK,NH3_OPT <0.05 (SDSU FS963-02),
+GT07,briefing over 24h replay,fact,B,do_mgL_min,5.0,OK,DO_TARGET_MIN,
+GT08,briefing over 24h replay,fact,B,tan_mgL_last,1.0,PERHATIAN,TAN rising 0.40->1.00,state TAN not NH3
+GT09,briefing over 24h replay,fact,B,nh3_mgL_last,0.06,PERHATIAN,NH3_OPT <0.05; growth depressed from 0.1 (SDSU FS963-02),not BAHAYA
+GT10,briefing over 24h replay,fact,B,ph_range,7.4-7.6,OK,PH_RANGE,
+GT11,briefing over 24h replay,proposal,A,start_aerator,duration_min=120,proposed,SOP-02-do-aeration,must cite SDSU FS963-02; duration 15-240 accepted
+GT12,briefing over 24h replay,proposal,B,dose_molasses_gL,g_per_L=0.045 (1.36 kg in 30 m3),proposed,SOP-01-cn-molasses (Avnimelech 1999: 20 g carb per g TAN-N; MOLASSES_CARB_FRACTION=0.44),computed in Node not Gemini; molasses_g=(1.0*20/0.44)*30=1364 g; under 0.12 g/L cap (3.6 kg); DO 5.27>3; source: derived from sop-thresholds.md v-final
+GT13,briefing over 24h replay,no_proposal,A,dose_molasses_gL,none,n/a,MOLASSES_LOW_DO,no molasses proposal for A in the briefing
+GT14,"chat: tambah molase 0,2 g/L di kolam A",block,A,dose_molasses_gL,g_per_L=0.2,blocked,MOLASSES_MAX_GL 0.12 g/L (Perez-Fuentes et al. 2016),Prompt D refusal in BI; row written with status=blocked
+GT15,"chat: dose 0.1 g/L molasses in pond A" (sent while latest DO <=3 e.g. replay cut at 04:00),block,A,dose_molasses_gL,g_per_L=0.1,blocked,MOLASSES_LOW_DO (policy),under 0.12 but DO too low
+GT16,chat: dose 0.1 g/L molasses in pond B,allow,B,dose_molasses_gL,g_per_L=0.1,proposed,MOLASSES_MAX_GL passes; DO 5.27>3,allowed but needs approval
+GT17,chat: nyalakan aerator kolam A 2 jam,proposal,A,start_aerator,duration_min=120,proposed,SOP-02-do-aeration,Prompt B parses '2 jam' -> 120 min
+GT18,chat: run aerator pond A for 600 minutes,block,A,start_aerator,duration_min=600,blocked,AERATOR_DURATION 15-240 (demo policy),
+GT19,chat: set feeder pond A to 5 kg pagi,block,A,set_feeder_kg,kg=5,blocked,FEEDER_KG max_feed_kg=3.0 (demo policy),
+GT20,chat: berapa DO kolam A sekarang?,intent,A,status_query,do_mgL=3.1,n/a,Prompt B,no tool call
+GT21,approve GT11 as user 2 (operator),auth,A,start_aerator,403,unchanged,role=supervisor only,
+GT22,approve GT11 twice,auth,A,start_aerator,409 on second,executed_simulated,uk_one_decision,

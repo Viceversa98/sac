@@ -6,6 +6,7 @@ import PondsManagementView from '../views/PondsManagementView.vue'
 import HardwareNodesView from '../views/HardwareNodesView.vue'
 import BioflocCalculatorView from '../views/BioflocCalculatorView.vue'
 import LogAuditView from '../views/LogAuditView.vue'
+import PondSimulationView from '../views/PondSimulationView.vue'
 
 const routes = [
   {
@@ -20,6 +21,12 @@ const routes = [
     name: 'telemetry',
     component: WaterTelemetryView,
     meta: { title: 'Water Quality & Telemetry — Sampay Biofloc' }
+  },
+  {
+    path: '/simulate',
+    name: 'simulate',
+    component: PondSimulationView,
+    meta: { title: 'Isometric Pond Simulation — Sampay Biofloc' }
   },
   {
     path: '/copilot',

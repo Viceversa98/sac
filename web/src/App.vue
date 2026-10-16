@@ -1,11 +1,14 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopHeader from './components/TopHeader.vue'
 import ScenarioSimulatorBar from './components/ScenarioSimulatorBar.vue'
 import ToastContainer from './components/ToastContainer.vue'
 
+const route = useRoute()
 const isSimulatorOpen = ref(false)
+const isViewportFit = computed(() => route.name === 'simulate')
 
 const toggleSimulator = () => {
   isSimulatorOpen.value = !isSimulatorOpen.value
@@ -13,7 +16,7 @@ const toggleSimulator = () => {
 </script>
 
 <template>
-  <div class="layout-wrapper">
+  <div class="layout-wrapper" :class="{ 'layout-wrapper--fit': isViewportFit }">
     <!-- Left Navigation Sidebar -->
     <Sidebar />
 
@@ -102,12 +105,41 @@ const toggleSimulator = () => {
   }
 }
 
+.layout-wrapper--fit {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.layout-wrapper--fit .main-content-wrapper {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.layout-wrapper--fit .page-body {
+  margin-top: 64px;
+  height: calc(100vh - 64px);
+  max-height: calc(100vh - 64px);
+  padding: 8px 14px 10px;
+  overflow: hidden;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: none;
+}
+
 @media (max-width: 768px) {
   .main-content-wrapper {
     margin-left: 0;
   }
   .page-body {
     padding: 80px 16px 32px;
+  }
+  .layout-wrapper--fit .page-body {
+    padding: 8px 12px 8px;
   }
 }
 </style>

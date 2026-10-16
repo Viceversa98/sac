@@ -254,13 +254,32 @@ export const factsForPond = (pondId: string, pondStats: PondStats): Fact[] => {
   return facts;
 };
 
+const CAPTION_LABEL: Record<string, string> = {
+  do_mgL_min: 'lowest DO',
+  do_mgL_last: 'latest DO',
+  ph_range: 'pH',
+  temp_c_range: 'temperature',
+  tan_mgL_last: 'TAN',
+  nh3_mgL_last: 'NH3',
+};
+
+const captionUnit = (param: string): string => {
+  if (param.startsWith('do_') || param.startsWith('tan_') || param.startsWith('nh3_')) return ' mg/L';
+  if (param === 'temp_c_range') return ' °C';
+  return '';
+};
+
 export const englishCaption = (facts: Fact[]): string => {
   const parts = ['Simulated data.'];
   for (const pondId of ['A', 'B']) {
     const pondFacts = facts.filter((fact) => fact.pond_id === pondId);
     if (pondFacts.length === 0) continue;
-    const bits = pondFacts.map((fact) => `${fact.param} ${fact.value}${fact.time_wib ? ` at ${fact.time_wib} WIB` : ''} (${fact.status})`);
+    const bits = pondFacts.map((fact) => {
+      const label = CAPTION_LABEL[fact.param] ?? fact.param;
+      const when = fact.time_wib ? ` at ${fact.time_wib} WIB` : '';
+      return `${label} ${fact.value}${captionUnit(fact.param)}${when} (${fact.status})`;
+    });
     parts.push(`Pond ${pondId}: ${bits.join('; ')}.`);
   }
-  return parts.join(' ');
+  return parts.join('\n');
 };

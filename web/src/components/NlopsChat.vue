@@ -43,6 +43,53 @@ const sendPromptPreset = (presetText) => {
   scrollToBottom()
 }
 
+const PARAM_LABELS = {
+  do_mgL_min: 'Lowest DO',
+  do_mgL_last: 'Latest DO',
+  ph_range: 'pH',
+  temp_c_range: 'Temperature',
+  tan_mgL_last: 'TAN',
+  nh3_mgL_last: 'NH₃'
+}
+
+const paramUnit = (param) => {
+  if (param.startsWith('do_') || param.startsWith('tan_') || param.startsWith('nh3_')) return ' mg/L'
+  if (param === 'temp_c_range') return ' °C'
+  return ''
+}
+
+const statusClass = (status) => {
+  if (status === 'BAHAYA') return 'badge-rose'
+  if (status === 'PERHATIAN') return 'badge-amber'
+  return 'badge-emerald'
+}
+
+const groupedFacts = (msg) => {
+  const groups = []
+  for (const fact of msg.facts || []) {
+    const pondId = fact.pond_id || '?'
+    let group = groups.find((item) => item.pondId === pondId)
+    if (!group) {
+      group = { pondId, rows: [] }
+      groups.push(group)
+    }
+    group.rows.push(fact)
+  }
+  return groups
+}
+
+const formatFactValue = (fact) => {
+  const when = fact.time_wib ? ` at ${fact.time_wib} WIB` : ''
+  return `${fact.value}${paramUnit(fact.param)}${when}`
+}
+
+const displayText = (msg) => {
+  const text = msg.text || ''
+  const isNodeSummary = text.startsWith('Data SIMULATED.') || text.startsWith('SIMULATED data.')
+  if (msg.facts?.length && isNodeSummary) return text.split('\n')[0]
+  return text
+}
+
 const formatMarkdown = (text) => {
   if (!text) return ''
   return text
@@ -123,9 +170,33 @@ const formatMarkdown = (text) => {
           <div
             class="msg-body"
             :class="{ 'briefing-card': msg.isBriefing }"
-            v-html="formatMarkdown(msg.text)"
+            v-html="formatMarkdown(displayText(msg))"
           ></div>
-          <p v-if="msg.englishCaption" class="english-caption" lang="en">
+          <div v-if="groupedFacts(msg).length" class="fact-sheet" aria-label="Pond readings">
+            <section v-for="group in groupedFacts(msg)" :key="msg.id + '-' + group.pondId" class="fact-pond">
+              <h3 class="fact-pond-title">Pond {{ group.pondId }}</h3>
+              <table class="fact-table">
+                <caption class="sr-only">Readings for pond {{ group.pondId }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Reading</th>
+                    <th scope="col">Value</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="fact in group.rows" :key="fact.param">
+                    <th scope="row">{{ PARAM_LABELS[fact.param] || fact.param }}</th>
+                    <td>{{ formatFactValue(fact) }}</td>
+                    <td>
+                      <span class="badge" :class="statusClass(fact.status)">{{ fact.status }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+          <p v-if="msg.englishCaption && !groupedFacts(msg).length" class="english-caption" lang="en">
             {{ msg.englishCaption }}
           </p>
 
@@ -476,6 +547,77 @@ const formatMarkdown = (text) => {
   color: var(--text-secondary);
   font-size: 0.78rem;
   line-height: 1.45;
+  white-space: pre-line;
+}
+
+.fact-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.fact-pond {
+  position: relative;
+}
+
+.fact-pond-title {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.fact-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.78rem;
+}
+
+.fact-table th,
+.fact-table td {
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fact-table thead th {
+  background: var(--bg-surface-subtle);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.fact-table tbody th {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.fact-table td {
+  color: var(--text-secondary);
+}
+
+.fact-table tr:last-child th,
+.fact-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .user .msg-body {

@@ -1,0 +1,28 @@
+{
+  "_note": "SYNTHETIC / SIMULATED. Exact values shown in the demo video. Demo Day Coach must use these numbers verbatim. Times WIB (UTC+7).",
+  "replay_files": ["telemetry/pond_A_do_drop.csv", "telemetry/pond_B_tan_rise.csv"],
+  "replay_window": {"from": "2026-10-14T06:00:00+07:00", "to": "2026-10-15T05:45:00+07:00", "interval_min": 15},
+  "ponds": {
+    "A": {"volume_m3": 30, "do_min_mgL": 2.4, "do_min_at": "04:00 WIB", "do_below_3_window": "02:15-05:30 WIB", "do_last_mgL": 3.1,
+          "ph_range": [7.45, 7.75], "temp_c_range": [27.2, 28.4], "tan_last_mgL": 0.4, "nh3_last_mgL": 0.02},
+    "B": {"volume_m3": 30, "do_min_mgL": 5.0, "do_last_mgL": 5.27, "ph_range": [7.4, 7.6], "temp_c_range": [27.0, 28.0],
+          "tan_last_mgL": 1.0, "nh3_last_mgL": 0.06}
+  },
+  "scenes": [
+    {"n": 1, "action": "Click 'Putar ulang data (SIMULASI)'", "expect": "Pond cards show Kolam A DO 3.1 (overnight min 2.4 at 04:00), Kolam B NH3 0.06"},
+    {"n": 2, "action": "Click 'Briefing pagi' (lang=id)", "expect": "Kolam A BAHAYA: DO turun ke 2,4 mg/L pukul 04:00 (batas >3 mg/L [SDSU FS963-02]). Kolam B PERHATIAN: NH3 0,06 mg/L (optimum <0,05)."},
+    {"n": 3, "action": "Approve proposal start_aerator(A, 120 min)", "expect": "Audit row status executed_simulated, approver Pak Budi"},
+    {"n": 4, "action": "Type: tambah molase 0,2 g/L di kolam A", "expect": "DIBLOKIR: melebihi 0,12 g/L (Pérez-Fuentes et al. 2016: DO turun dari 3,2 ke 1-1,5 mg/L). Alternatif: aerasi dulu, dosis <=0,12 g/L setelah DO >3."},
+    {"n": 5, "action": "Approve proposal dose_molasses_gL(B, 0.045)", "expect": "0,045 g/L = 1,36 kg untuk 30 m3 (Avnimelech 1999: 20 g karbohidrat per g TAN; fraksi karbohidrat molase 0,44)", "source": "derived from sop-thresholds.md v-final: molasses_g=(1.0*20/0.44)*30=1364 g; cap 0.12 g/L=3.6 kg not hit; DO 5.27>3"},
+    {"n": 6, "action": "Toggle language to English, regenerate briefing", "expect": "Same facts in English"},
+    {"n": 7, "action": "Open audit log", "expect": "3+ rows: approved aerator, blocked molasses A, approved molasses B"}
+  ],
+  "allowed_pitch_numbers": {
+    "tilapia_2023_t": "1,368,542 t (1.37 Mt) KKP Satu Data via SEAFDEC 2025",
+    "fish_farming_households": "939,701 (BPS Sensus Pertanian 2023)",
+    "feed_share_cost": "58.34% of total production cost (Tongsiri et al. 2020, Thai biofloc tilapia)",
+    "vfd_energy_saving": "25% energy reduction (UF/IFAS EDIS FA247) - roadmap only",
+    "bom_per_pond": "~$340-460 list prices before shipping/duty - roadmap only"
+  },
+  "banned": ["70% crop failures", "1.56 Mt (unconfirmed)", "$275 BOM", "Zero-Hallucination", "$0.002/1k tokens"]
+}
