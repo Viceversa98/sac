@@ -50,15 +50,43 @@ In ${lang === 'id' ? 'Bahasa Indonesia' : 'English'}, in ≤ 60 words, tell the 
 and the safe alternative (e.g. run the aerator first; dose ≤ 0.12 g/L only after DO > 3 mg/L).
 Never offer a way to bypass the rule.`;
 
+const PARAM_LABEL_ID: Record<string, string> = {
+  do_mgL_min: 'DO terendah',
+  do_mgL_last: 'DO terakhir',
+  ph_range: 'pH',
+  temp_c_range: 'Suhu',
+  tan_mgL_last: 'TAN',
+  nh3_mgL_last: 'NH3',
+};
+
+const factLineId = (fact: Fact): string => {
+  const label = PARAM_LABEL_ID[fact.param] ?? fact.param;
+  const unit = fact.param.startsWith('do_') || fact.param.startsWith('tan_') || fact.param.startsWith('nh3_')
+    ? ' mg/L'
+    : fact.param === 'temp_c_range'
+      ? ' °C'
+      : '';
+  const when = fact.time_wib ? ` pada ${fact.time_wib} WIB` : '';
+  return `• ${label}: ${fact.value}${unit}${when} — ${fact.status}`;
+};
+
 export const fallbackBriefing = (lang: 'id' | 'en', facts: Fact[]): string => {
-  const lines = facts.map((fact) => {
-    const when = fact.time_wib ? ` at ${fact.time_wib} WIB` : '';
-    return `${fact.pond_id} ${fact.param} ${fact.value}${when} ${fact.status} [${fact.citation}]`;
-  });
   const lead = lang === 'id'
     ? 'Data SIMULATED. Ringkasan dari angka yang dihitung di Node, bukan oleh model.'
     : 'SIMULATED data. Summary uses numbers computed in Node, not by the model.';
-  return [lead, ...lines].join(' ').slice(0, 900);
+  if (lang === 'en') {
+    return [lead, ...facts.map((fact) => {
+      const when = fact.time_wib ? ` at ${fact.time_wib} WIB` : '';
+      return `• Pond ${fact.pond_id} ${fact.param}: ${fact.value}${when} — ${fact.status}`;
+    })].join('\n');
+  }
+  const blocks = ['A', 'B'].flatMap((pondId) => {
+    const pondFacts = facts.filter((fact) => fact.pond_id === pondId);
+    if (pondFacts.length === 0) return [];
+    return [`Kolam ${pondId}`, ...pondFacts.map(factLineId)];
+  });
+  const citation = facts[0]?.citation;
+  return [lead, ...blocks, citation ? `Sumber: ${citation}` : ''].filter(Boolean).join('\n');
 };
 
 export const fallbackRefusal = (lang: 'id' | 'en', safety: SafetyResult): string => {

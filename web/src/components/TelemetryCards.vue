@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { usePonds } from '../composables/usePonds'
+import { PH_MAX, PH_MIN, TEMP_MAX_C, TEMP_MIN_C } from '../pondHardware'
 import { 
   Droplet, 
   Thermometer, 
@@ -22,9 +23,14 @@ const doStatus = computed(() => {
 
 const phStatus = computed(() => {
   const v = activePond.value.telemetry.ph
-  if (v < 6.8 || v > 8.5) return { label: 'UNBALANCED', class: 'rose', border: 'border-rose' }
-  if (v < 7.2 || v > 8.0) return { label: 'MONITOR CAREFULLY', class: 'amber', border: '' }
-  return { label: 'BALANCED (NORMAL)', class: 'emerald', border: '' }
+  if (v < PH_MIN || v > PH_MAX) return { label: 'OUTSIDE 7–9', class: 'rose', border: 'border-rose' }
+  return { label: 'WITHIN 7–9', class: 'emerald', border: '' }
+})
+
+const tempStatus = computed(() => {
+  const v = activePond.value.telemetry.temp
+  if (v < TEMP_MIN_C || v > TEMP_MAX_C) return { label: 'OUTSIDE 22–29 °C', class: 'rose' }
+  return { label: 'WITHIN 22–29 °C', class: 'emerald' }
 })
 
 const ammoniaStatus = computed(() => {
@@ -120,21 +126,21 @@ const estimatedBiomass = computed(() => {
 
           <!-- Line Card Scale Tags (Min / Target / Max) -->
           <div class="gauge-scale-row font-mono">
-            <span class="scale-tag min">MIN: 6.0</span>
-            <span class="scale-tag target">IDEAL: 7.2 - 8.0</span>
-            <span class="scale-tag max">MAX: 9.0 pH</span>
+            <span class="scale-tag min">MIN: 7.0</span>
+            <span class="scale-tag target">RANGE: 7.0 – 9.0</span>
+            <span class="scale-tag max">MAX: 9.0</span>
           </div>
 
           <div class="gauge-bar-wrapper">
             <div 
               class="gauge-fill ph" 
-              :style="{ width: Math.min(100, ((activePond.telemetry.ph - 6) / 3) * 100) + '%' }"
+              :style="{ width: Math.min(100, Math.max(0, ((activePond.telemetry.ph - PH_MIN) / (PH_MAX - PH_MIN)) * 100)) + '%' }"
             ></div>
             <div class="gauge-target-marker" style="left: 50%;" title="Neutral Target 7.5"></div>
           </div>
           <div class="card-footer-info">
             <span>Buffer Stability: Normal</span>
-            <span>Ideal Range: 7.2 - 8.0</span>
+            <span>Range: 7.0 – 9.0</span>
           </div>
         </div>
       </div>
@@ -145,7 +151,7 @@ const estimatedBiomass = computed(() => {
           <div class="icon-wrap amber">
             <Thermometer :size="18" />
           </div>
-          <span class="badge badge-emerald">OPTIMAL FOR FISH</span>
+          <span class="badge" :class="'badge-' + tempStatus.class">{{ tempStatus.label }}</span>
         </div>
         <div class="card-body">
           <span class="metric-label">Water Temperature</span>
@@ -156,20 +162,20 @@ const estimatedBiomass = computed(() => {
 
           <!-- Line Card Scale Tags (Min / Target / Max) -->
           <div class="gauge-scale-row font-mono">
-            <span class="scale-tag min">MIN: 24.0°C</span>
-            <span class="scale-tag target">OPT: 28.0 - 30.0°C</span>
-            <span class="scale-tag max">MAX: 34.0°C</span>
+            <span class="scale-tag min">MIN: 22.0°C</span>
+            <span class="scale-tag target">RANGE: 22.0 – 29.0°C</span>
+            <span class="scale-tag max">MAX: 29.0°C</span>
           </div>
 
           <div class="gauge-bar-wrapper">
             <div 
               class="gauge-fill temp" 
-              :style="{ width: Math.min(100, ((activePond.telemetry.temp - 24) / 10) * 100) + '%' }"
+              :style="{ width: Math.min(100, Math.max(0, ((activePond.telemetry.temp - TEMP_MIN_C) / (TEMP_MAX_C - TEMP_MIN_C)) * 100)) + '%' }"
             ></div>
           </div>
           <div class="card-footer-info">
             <span>Feeding Response: Strong</span>
-            <span>Optimum: 28.0 - 30.0 °C</span>
+            <span>Range: 22.0 – 29.0 °C</span>
           </div>
         </div>
       </div>

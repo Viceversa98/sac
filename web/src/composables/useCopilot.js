@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import { usePonds } from './usePonds'
 import { useToast } from './useToast'
 
 const nowLabel = () =>
@@ -17,7 +16,6 @@ const pushAssistant = (messages, text, extra = {}) => {
 }
 
 export function useCopilot() {
-  const { activePond } = usePonds()
   const { showToast } = useToast()
 
   const isThinking = ref(false)
@@ -46,26 +44,31 @@ export function useCopilot() {
       senderName: 'Co-Pilot',
       timestamp: '08:02 WIB',
       text: 'Supervisor instruction received. Dissolved oxygen and temperature in the briefing support a feed proposal. Approving writes an audit row only.',
-      actionCard: {
-        id: 'act-101',
-        title: 'Supervisor Authorization Required',
-        pondId: 'K04',
-        type: 'FEEDER_DISPENSE',
-        amountKg: 5.2,
-        targetDevice: 'Proposed feed (simulated)',
-        description: 'Propose 5.2 kg feed for Pond #4. Approve records executed_simulated. No hardware command is sent.',
-        status: 'pending'
-      }
     }
   ])
+
+  const cardFromCall = (call) => {
+    const args = call.args && typeof call.args === 'object' ? call.args : {}
+    const pending = call.status === 'proposed'
+    return {
+      id: String(call.id),
+      toolCallId: String(call.id),
+      title: pending ? 'Supervisor Authorization Required' : 'Blocked proposal',
+      pondId: call.pond_id,
+      type: call.tool_name,
+      targetDevice: call.tool_name,
+      description: call.rationale || args.reason || 'Proposal from the API. Approve records executed_simulated. No hardware command is sent.',
+      status: pending ? 'pending' : 'cancelled'
+    }
+  }
 
   const postToolDecision = async (actionCard, decision) => {
     if (!actionCard || actionCard.status !== 'pending' || actionCard.isSubmitting) return
 
     const toolCallId = actionCard.toolCallId || actionCard.id
-    if (!toolCallId) {
-      showToast('No tool-call id. Nothing was recorded.', 'error')
-      pushAssistant(messages, 'No tool-call id was present. Nothing was recorded. No hardware command was sent.')
+    if (!/^\d+$/.test(String(toolCallId))) {
+      showToast('This proposal has no API id. Nothing was recorded.', 'error')
+      pushAssistant(messages, 'This proposal has no API id. Nothing was recorded. No hardware command was sent.')
       return
     }
 
@@ -125,59 +128,67 @@ export function useCopilot() {
     })
 
     isThinking.value = true
+    const lower = userText.toLowerCase()
+    const wantsBriefing = lower.includes('briefing') || lower.includes('morning') || lower.includes('ringkasan')
 
-    setTimeout(() => {
-      isThinking.value = false
-      const lower = userText.toLowerCase()
-      const pond = activePond.value
-
-      let replyText = ''
-      let englishCaption = ''
-      let isBriefing = false
-      let newActionCard = null
-
-      if (lower.includes('briefing') || lower.includes('morning') || lower.includes('summary')) {
-        isBriefing = true
-        const tan = pond.telemetry.ammonia
-        replyText = `☀ **BRIEFING (${pond.name.toUpperCase()})**\n\nRingkasan 24 jam:\n• **Oksigen terlarut (DO)**: ${pond.telemetry.do} mg/L\n• **pH**: ${pond.telemetry.ph} | **Suhu**: ${pond.telemetry.temp}°C\n• **TAN**: ${tan} mg/L\n• **Kepadatan bioflok**: ${pond.telemetry.flocDensity} mL/L\n\nData ini SIMULASI.`
-        englishCaption = `Briefing for ${pond.name}. Dissolved oxygen ${pond.telemetry.do} mg/L, pH ${pond.telemetry.ph}, temperature ${pond.telemetry.temp}°C, TAN ${tan} mg/L, biofloc ${pond.telemetry.flocDensity} mL/L. This data is simulated.`
-      } else if (lower.includes('molasses') || lower.includes('c/n') || lower.includes('carbon') || lower.includes('ammonia') || lower.includes('sugar')) {
-        replyText = `🧪 **TAN ${pond.telemetry.ammonia} mg/L** on ${pond.name}. A molasses amount is not calculated in the browser. Ask the API for a cited dose. Approving a proposal records executed_simulated and does not send a hardware command.`
-      } else if (lower.includes('feed') || lower.includes('pakan') || lower.includes('dispense')) {
-        replyText = `🐟 **FEEDING & FCR ANALYSIS:**\n\nCurrent estimated biomass is **${Math.round(pond.fishCount * pond.avgWeightGrams / 1000)} kg**. Based on metabolic curves at ${pond.telemetry.temp}°C and DO of ${pond.telemetry.do} mg/L, optimum daily ration is 3.0% of body weight split across 4 feeding windows.\n\nThis window requires **5.2 kg** of 32% protein BioGrow-7 pellets.`
-
-        newActionCard = {
-          id: 'act-' + Date.now(),
-          title: 'Authorize Feed Dispensing',
-          pondId: pond.id,
-          type: 'FEEDER_DISPENSE',
-          amountKg: 5.2,
-          targetDevice: 'Proposed feed (simulated)',
-          description: `Propose 5.2 kg feed for ${pond.name}. Approve records executed_simulated. No hardware command is sent.`,
-          status: 'pending'
-        }
-      } else if (lower.includes('emergency') || lower.includes('oxygen') || lower.includes('hypoxia') || lower.includes('aerat')) {
-        replyText = `🚨 **BIOFLOC EMERGENCY PROTOCOL (LOW DO):**\n\nCurrent DO is detected at **${pond.telemetry.do} mg/L**. Safe operating threshold for biofloc is >= 5.0 mg/L.\n\n**Immediate Recommendation:**\nBoost aeration blower/paddlewheel VFD to 100% immediately and pause feeding temporarily to reduce Biological Oxygen Demand (BOD).`
-
-        newActionCard = {
-          id: 'act-' + Date.now(),
-          title: 'Authorize 100% Aeration Boost',
-          pondId: pond.id,
-          type: 'AERATOR_BOOST',
-          targetDevice: 'Proposed aeration (simulated)',
-          description: 'Propose an aeration increase. Approve records executed_simulated. No hardware command is sent.',
-          status: 'pending'
-        }
-      } else {
-        replyText = `🤖 **Sampay Co-Pilot:**\n\nInstruction "${userText}" received. Current telemetry for ${pond.name}: DO ${pond.telemetry.do} mg/L, pH ${pond.telemetry.ph}, Temp ${pond.telemetry.temp}°C, TAN ${pond.telemetry.ammonia} mg/L. Would you like a morning briefing?`
+    try {
+      const response = await fetch(wantsBriefing ? '/api/briefings' : '/api/chat', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(wantsBriefing ? { lang: 'id' } : { message: userText, lang: 'id' })
+      })
+      const data = await response.json().catch(() => null)
+      if (!response.ok || !data) {
+        const message = data?.message || `The API returned ${response.status}.`
+        showToast(message, 'error')
+        pushAssistant(messages, `${message} Nothing was recorded. No hardware command was sent.`)
+        return
       }
 
-      pushAssistant(messages, replyText, {
-        isBriefing,
-        englishCaption,
-        actionCard: newActionCard
+      if (wantsBriefing) {
+        pushAssistant(messages, data.briefing || 'The API returned an empty briefing.', {
+          isBriefing: true,
+          englishCaption: data.english_caption || '',
+          facts: Array.isArray(data.facts) ? data.facts : []
+        })
+        for (const proposal of data.proposals || []) {
+          if (proposal.status !== 'proposed' && proposal.status !== 'blocked') continue
+          pushAssistant(messages, proposal.rationale || proposal.tool_name, {
+            actionCard: cardFromCall(proposal)
+          })
+        }
+        return
+      }
+
+      const call = data.tool_call
+      pushAssistant(messages, data.reply || 'The API returned an empty reply.', {
+        actionCard: call ? cardFromCall(call) : null
       })
-    }, 750)
+    } catch {
+      showToast('API is unreachable.', 'error')
+      pushAssistant(messages, 'The API is unreachable. Nothing was recorded. No hardware command was sent.')
+    } finally {
+      isThinking.value = false
+    }
+  }
+
+  const loadProposed = async () => {
+    try {
+      const response = await fetch('/api/tool-calls?status=proposed', { headers: { Accept: 'application/json' } })
+      if (!response.ok) return
+      const data = await response.json()
+      for (const call of data.tool_calls || []) {
+        const already = messages.value.some((message) => message.actionCard?.toolCallId === String(call.id))
+        if (already) continue
+        pushAssistant(messages, call.rationale || call.tool_name, { actionCard: cardFromCall(call) })
+      }
+    } catch {
+      // The canned briefing stays on screen when the API is down.
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    loadProposed()
   }
 
   return {

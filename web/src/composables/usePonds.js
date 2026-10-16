@@ -448,6 +448,7 @@ if (typeof window !== 'undefined') {
   setInterval(() => {
     if (!isLiveSimulationRunning.value) return
     ponds.value.forEach(pond => {
+      if (pond.telemetrySource === 'api') return
       const doJitter = (Math.random() * 0.04 - 0.02)
       const phJitter = (Math.random() * 0.02 - 0.01)
       const tempJitter = (Math.random() * 0.04 - 0.02)
@@ -457,6 +458,58 @@ if (typeof window !== 'undefined') {
       pond.telemetry.temp = Math.max(26.0, Math.min(32.0, Number((pond.telemetry.temp + tempJitter).toFixed(1))))
     })
   }, 3000)
+}
+
+const numberOr = (value, fallback) => {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+
+const applyApiPond = (apiPond) => {
+  const stats = apiPond.stats
+  const existing = ponds.value.find((pond) => pond.id === apiPond.id)
+  const pond = existing ?? JSON.parse(JSON.stringify(ponds.value[ponds.value.length - 1]))
+  pond.id = apiPond.id
+  pond.name = apiPond.name
+  pond.species = apiPond.species || pond.species
+  pond.volumeM3 = numberOr(apiPond.volume_m3, pond.volumeM3)
+  pond.telemetrySource = 'api'
+  pond.telemetry.do = numberOr(stats?.do?.last, pond.telemetry.do)
+  pond.telemetry.ph = numberOr(stats?.ph?.last, pond.telemetry.ph)
+  pond.telemetry.temp = numberOr(stats?.temp?.last, pond.telemetry.temp)
+  pond.telemetry.ammonia = numberOr(stats?.tan?.last, pond.telemetry.ammonia)
+  if (!existing) ponds.value.push(pond)
+}
+
+const readPonds = async () => {
+  const response = await fetch('/api/ponds', { headers: { Accept: 'application/json' } })
+  if (!response.ok) return null
+  const data = await response.json()
+  return Array.isArray(data.ponds) ? data.ponds : []
+}
+
+const refreshFromApi = async () => {
+  let list = await readPonds()
+  if (!list) return false
+  const empty = list.length > 0 && list.every((pond) => !pond.stats || pond.stats.count === 0)
+  if (empty) {
+    await fetch('/api/telemetry/replay', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: '{}'
+    })
+    list = await readPonds()
+    if (!list) return false
+  }
+  for (const pond of list) applyApiPond(pond)
+  if (list.length > 0 && !list.some((pond) => pond.id === selectedPondId.value)) {
+    selectedPondId.value = list[0].id
+  }
+  return true
+}
+
+if (typeof window !== 'undefined') {
+  refreshFromApi()
 }
 
 export function usePonds() {
@@ -916,6 +969,7 @@ export function usePonds() {
   return {
     ponds,
     selectedPondId,
+    refreshFromApi,
     activePond,
     activePondBiomassMetrics,
     globalFarmMetrics,

@@ -13,7 +13,7 @@ import {
 } from 'lucide-vue-next'
 
 const emit = defineEmits(['toggle-simulator'])
-const { globalFarmMetrics } = usePonds()
+const { globalFarmMetrics, refreshFromApi } = usePonds()
 const { showToast } = useToast()
 const isResetting = ref(false)
 const resetError = ref('')
@@ -32,7 +32,8 @@ const handleResetDemo = async () => {
       showToast('Demo was not reset. The API returned an error.', 'error')
       return
     }
-    showToast('Demo reset. Recorded decisions were cleared on the API.', 'success')
+    await refreshFromApi()
+    showToast('Demo reset. Pond readings were reloaded from the API.', 'success')
   } catch {
     resetError.value = 'API unreachable.'
     showToast('API is unreachable. Demo was not reset.', 'error')

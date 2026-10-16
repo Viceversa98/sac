@@ -11,7 +11,8 @@ import {
   Waves,
   Sparkles,
   Bot,
-  Activity
+  Activity,
+  Box
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -20,6 +21,7 @@ const { ponds } = usePonds()
 const navItems = computed(() => [
   { id: 'dashboard', path: '/', label: 'Pond Overview', icon: LayoutDashboard, badge: null },
   { id: 'telemetry', path: '/telemetry', label: 'Water & Telemetry', icon: Activity, badge: 'Sensors' },
+  { id: 'simulate', path: '/simulate', label: 'Pond Simulation', icon: Box, badge: '3D' },
   { id: 'copilot', path: '/copilot', label: 'Co-Pilot', icon: Bot, badge: 'AI Assistant' },
   { id: 'ponds', path: '/ponds', label: 'Ponds Fleet', icon: Layers, badge: `${ponds.value.length} Ponds` },
   { id: 'hardware', path: '/hardware', label: 'Equipment & Sensors', icon: Cpu, badge: null },
@@ -179,6 +181,8 @@ const isItemActive = (item) => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .nav-section-title {

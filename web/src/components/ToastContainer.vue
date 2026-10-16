@@ -31,28 +31,30 @@ const { toasts, removeToast } = useToast()
 <style scoped>
 .toast-container {
   position: fixed;
-  bottom: 24px;
+  /* Clears the Windows taskbar when the window extends behind it. */
+  bottom: 72px;
   right: 24px;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 380px;
+  width: min(380px, calc(100vw - 48px));
 }
 
 .toast-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  color: var(--text-primary);
+  color: #f8fafc;
   font-size: 0.85rem;
   font-weight: 500;
+  line-height: 1.45;
 }
 
 .toast-success {
@@ -65,21 +67,28 @@ const { toasts, removeToast } = useToast()
   border-color: rgba(6, 182, 212, 0.4);
 }
 
+.toast-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
 .toast-icon.success { color: var(--emerald-400); }
 .toast-icon.warning { color: var(--amber-400); }
 .toast-icon.info { color: var(--cyan-400); }
 
 .toast-msg {
   flex: 1;
+  min-width: 0;
 }
 
 .toast-close {
   background: transparent;
-  color: var(--text-muted);
+  color: #cbd5e1;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
   padding: 2px;
   border-radius: 4px;
 }
