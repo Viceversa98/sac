@@ -148,7 +148,7 @@ const handleExecuteTransfer = () => {
             <Award :size="20" class="text-amber" />
           </div>
           <div>
-            <h3 class="modal-title font-display">Manage & End Culture Cycle</h3>
+            <h3 class="modal-title">End this cycle</h3>
             <span class="modal-sub font-mono">
               {{ pond.name }} • Current Stock: {{ pond.fishCount?.toLocaleString() }} fish (~{{ currentBiomassKg.toLocaleString() }} kg @ {{ pond.avgWeightGrams }}g)
             </span>

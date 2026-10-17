@@ -1,20 +1,19 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { usePonds } from '../composables/usePonds'
-import { 
-  FileText, 
-  Download, 
-  Sparkles, 
-  User, 
-  Utensils, 
-  Pipette, 
-  TrendingUp, 
-  Scale, 
-  CheckCircle2,
+import {
+  Download,
+  Sparkles,
+  User,
+  Utensils,
+  Pipette,
+  TrendingUp,
+  Scale,
   Building2,
   SlidersHorizontal,
   Skull
 } from 'lucide-vue-next'
+import PageIntro from '../components/PageIntro.vue'
 
 const { ponds, globalFarmMetrics, operationalLogs } = usePonds()
 
@@ -25,12 +24,12 @@ const filterType = ref('ALL') // 'ALL' | 'AUTO' | 'MANUAL_ADJUST' | 'FEEDING' | 
 const currentMetrics = computed(() => {
   if (selectedPondFilter.value === 'ALL') {
     return {
-      title: 'Total Farm Cumulative Feed',
-      subFeed: 'Across all 4 active production ponds',
+      title: 'Feed so far',
+      subFeed: 'All ponds',
       totalFeedKg: globalFarmMetrics.value.totalCumulativeFeedKg,
       totalMolassesKg: globalFarmMetrics.value.totalCumulativeMolassesKg,
       fcr: globalFarmMetrics.value.fcr,
-      fcrText: '⭐ Cluster Weighted Biofloc FCR',
+      fcrText: 'Lower is better.',
       totalBiomassKg: globalFarmMetrics.value.totalBiomassKg,
       netGainKg: globalFarmMetrics.value.totalBiomassGainKg
     }
@@ -44,12 +43,12 @@ const currentMetrics = computed(() => {
   const estimatedFcr = Number((cumulativeFeedKg / netGainKg).toFixed(2))
 
   return {
-    title: `${p.id} Cumulative Feed`,
-    subFeed: `${p.name} (${p.phase})`,
+    title: `${p.id} feed so far`,
+    subFeed: p.name,
     totalFeedKg: cumulativeFeedKg,
     totalMolassesKg: Number((p.cumulativeMolassesKg || 25).toFixed(1)),
     fcr: estimatedFcr,
-    fcrText: `Live FCR for ${p.id}`,
+    fcrText: 'Lower is better.',
     totalBiomassKg: currentBiomassKg,
     netGainKg: netGainKg
   }
@@ -104,18 +103,13 @@ const exportLogsCsv = () => {
   <div class="log-audit-view">
     <!-- Header -->
     <div class="view-header">
-      <div class="header-left">
-        <div class="icon-box">
-          <FileText :size="22" class="text-sky" />
-        </div>
-        <div>
-          <h2 class="view-title font-display">Operational Input Ledger & Execution Audit Trail</h2>
-          <span class="view-sub">Chronological immutable audit log of feeding, carbon dosing, aeration tuning, and auto vs manual actions</span>
-        </div>
-      </div>
+      <PageIntro
+        title="Log"
+        purpose="Feed, molasses, and other actions that were approved. Approving only writes a row here."
+      />
       <button class="btn-primary" @click="exportLogsCsv">
-        <Download :size="16" />
-        <span>Export Ledger (CSV)</span>
+        <Download :size="16" aria-hidden="true" />
+        <span>Export CSV</span>
       </button>
     </div>
 
@@ -123,7 +117,7 @@ const exportLogsCsv = () => {
     <div class="scope-selector-bar font-mono">
       <div class="scope-label-wrap">
         <SlidersHorizontal :size="13" class="text-sky" />
-        <span class="scope-label">Pond Scope Filter:</span>
+        <span class="scope-label">Pond</span>
       </div>
       <div class="scope-pills">
         <button 
@@ -149,15 +143,15 @@ const exportLogsCsv = () => {
     </div>
 
     <!-- Aggregations Top Banner (Reacts to Selected Pond or Farm Total) -->
-    <div class="farm-aggregations-grid font-mono">
+    <div class="farm-aggregations-grid">
       <div class="agg-card">
         <div class="agg-icon-wrap sky">
           <Utensils :size="18" />
         </div>
         <div class="agg-data">
-          <span class="agg-label font-sans">{{ currentMetrics.title }}</span>
+          <span class="agg-label">{{ currentMetrics.title }}</span>
           <div class="agg-val-row">
-            <span class="agg-num font-display">{{ currentMetrics.totalFeedKg.toLocaleString() }}</span>
+            <span class="agg-num">{{ currentMetrics.totalFeedKg.toLocaleString() }}</span>
             <span class="agg-unit">kg</span>
           </div>
           <span class="agg-sub text-muted">{{ currentMetrics.subFeed }}</span>
@@ -169,12 +163,12 @@ const exportLogsCsv = () => {
           <Pipette :size="18" />
         </div>
         <div class="agg-data">
-          <span class="agg-label font-sans">Cumulative Molasses (Carbon)</span>
+          <span class="agg-label">Molasses added</span>
           <div class="agg-val-row">
-            <span class="agg-num font-display">{{ currentMetrics.totalMolassesKg.toLocaleString() }}</span>
+            <span class="agg-num">{{ currentMetrics.totalMolassesKg.toLocaleString() }}</span>
             <span class="agg-unit">kg</span>
           </div>
-          <span class="agg-sub text-muted">40% Organic C biofloc stimulation</span>
+          <span class="agg-sub">Carbon added with the feed.</span>
         </div>
       </div>
 
@@ -183,9 +177,9 @@ const exportLogsCsv = () => {
           <TrendingUp :size="18" />
         </div>
         <div class="agg-data">
-          <span class="agg-label font-sans">Estimated FCR Conversion</span>
+          <span class="agg-label">Feed per kg of fish</span>
           <div class="agg-val-row">
-            <span class="agg-num font-display text-emerald">{{ currentMetrics.fcr }}</span>
+            <span class="agg-num">{{ currentMetrics.fcr }}</span>
             <span class="agg-unit">kg feed / kg fish</span>
           </div>
           <span class="agg-sub text-emerald">{{ currentMetrics.fcrText }}</span>
@@ -197,9 +191,9 @@ const exportLogsCsv = () => {
           <Scale :size="18" />
         </div>
         <div class="agg-data">
-          <span class="agg-label font-sans">Fish Biomass (Current)</span>
+          <span class="agg-label">Fish weight</span>
           <div class="agg-val-row">
-            <span class="agg-num font-display">{{ currentMetrics.totalBiomassKg.toLocaleString() }}</span>
+            <span class="agg-num">{{ currentMetrics.totalBiomassKg.toLocaleString() }}</span>
             <span class="agg-unit">kg</span>
           </div>
           <span class="agg-sub text-emerald">+{{ currentMetrics.netGainKg.toLocaleString() }} kg net gain</span>
@@ -209,7 +203,7 @@ const exportLogsCsv = () => {
 
     <!-- Filter Bar: Action Provenance -->
     <div class="filter-bar glass-panel font-mono">
-      <span class="filter-label">Filter Action Type:</span>
+      <span class="filter-label">Show</span>
       <div class="filter-pills">
         <button 
           class="pill-btn" 
@@ -463,7 +457,7 @@ const exportLogsCsv = () => {
 }
 
 .agg-card.highlight-fcr {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  background: var(--emerald-50);
   border-color: var(--emerald-200);
 }
 
@@ -500,6 +494,7 @@ const exportLogsCsv = () => {
 }
 
 .agg-num {
+  font-family: var(--font-mono);
   font-size: 1.6rem;
   font-weight: 800;
   color: var(--text-primary);

@@ -56,8 +56,8 @@
   /* High Contrast Typography */
   --text-primary: #0f172a;
   --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
+  --text-muted: #475569;
+  --text-subtle: #475569;
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -86,10 +86,6 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(at 10% 10%, rgba(2, 132, 199, 0.03) 0px, transparent 50%),
-    radial-gradient(at 90% 20%, rgba(16, 185, 129, 0.03) 0px, transparent 50%),
-    radial-gradient(at 50% 90%, rgba(147, 51, 234, 0.02) 0px, transparent 50%);
 }
 
 /* Custom modern scrollbars */
@@ -181,44 +177,15 @@ body {
   display: inline-block;
 }
 .pulse-dot.online {
-  background-color: var(--emerald-500);
-}
-.pulse-dot.online::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 1.5px solid var(--emerald-500);
-  animation: pulse-ring 1.8s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  background-color: var(--emerald-600);
 }
 
 .pulse-dot.warning {
-  background-color: var(--amber-500);
-}
-.pulse-dot.warning::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 1.5px solid var(--amber-500);
-  animation: pulse-ring 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  background-color: var(--amber-600);
 }
 
 .pulse-dot.danger {
-  background-color: var(--rose-500);
-}
-.pulse-dot.danger::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 1.5px solid var(--rose-500);
-  animation: pulse-ring 0.8s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 0.8; }
-  100% { transform: scale(2.4); opacity: 0; }
+  background-color: var(--rose-600);
 }
 
 /* Buttons */
@@ -226,8 +193,13 @@ button {
   font-family: inherit;
   cursor: pointer;
   border: none;
-  outline: none;
-  transition: all 0.18s ease;
+  background: transparent;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .btn-primary {
@@ -279,7 +251,7 @@ button {
 }
 
 .section-title {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-primary);

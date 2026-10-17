@@ -58,7 +58,7 @@ const estimatedBiomass = computed(() => {
       <div class="section-title-wrapper">
         <h2 class="section-title">
           <Droplet class="title-icon text-sky" :size="18" />
-          Real-time Water Quality Conditions
+          Readings
         </h2>
         <span class="sensor-freq font-mono">Simulated readings • Pond: {{ activePond.name }}</span>
       </div>

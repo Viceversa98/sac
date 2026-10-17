@@ -116,7 +116,7 @@ const handleSubmit = () => {
             <Plus :size="20" class="text-sky" />
           </div>
           <div>
-            <h3 class="modal-title font-display">Register New Production Pond</h3>
+            <h3 class="modal-title">Add a pond</h3>
             <span class="modal-sub font-mono">Stocking parameters, initial fingerling biomass & hardware binding</span>
           </div>
         </div>

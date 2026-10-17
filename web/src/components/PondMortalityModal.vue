@@ -90,7 +90,7 @@ const handleSubmit = () => {
             <AlertOctagon :size="20" class="text-rose" />
           </div>
           <div>
-            <h3 class="modal-title font-display">Record Fish Mortality (Pencatatan Kematian)</h3>
+            <h3 class="modal-title">Record deaths</h3>
             <span class="modal-sub font-mono">
               {{ pond.name }} (ID: {{ pond.id }}) • Population: {{ pond.fishCount?.toLocaleString() }} fish • SR: {{ pond.survivalRate || 95 }}%
             </span>

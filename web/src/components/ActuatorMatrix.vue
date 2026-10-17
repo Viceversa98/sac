@@ -122,8 +122,8 @@ const handleEmergencyFlush = () => {
       <div class="section-title-wrap">
         <Wrench class="title-icon text-sky" :size="20" />
         <div>
-          <h3 class="panel-title font-display">Equipment Controls & Actuation Workflows</h3>
-          <span class="panel-sub">Customizable dosages, VFD aeration tuning & emergency water siphon • {{ activePond.name }}</span>
+          <h3 class="panel-title">Equipment</h3>
+          <span class="panel-sub">Feed, air, molasses, and drain for {{ activePond.name }}. These controls stay in the demo.</span>
         </div>
       </div>
       <div class="status-summary font-mono">
@@ -582,19 +582,19 @@ const handleEmergencyFlush = () => {
 }
 
 .recommendation-callout.highlight-primary {
-  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  background: var(--sky-50);
   border-color: var(--sky-200);
   border-left: 4px solid var(--sky-500);
 }
 
 .recommendation-callout.highlight-warning {
-  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+  background: var(--amber-50);
   border-color: var(--amber-200);
   border-left: 4px solid var(--amber-500);
 }
 
 .recommendation-callout.highlight-danger {
-  background: linear-gradient(135deg, #fff1f2 0%, #ffffff 100%);
+  background: var(--rose-50);
   border-color: var(--rose-200);
   border-left: 4px solid var(--rose-500);
 }

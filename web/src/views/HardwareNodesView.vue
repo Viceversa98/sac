@@ -1,33 +1,22 @@
-<script setup>
+﻿<script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePonds } from '../composables/usePonds'
 import { useToast } from '../composables/useToast'
 import { 
-  Cpu, 
   Wifi, 
   Zap, 
-  Activity, 
-  CheckCircle2, 
   RotateCw, 
-  ShieldCheck, 
   Radio, 
   Server, 
-  ArrowUpRight, 
-  SlidersHorizontal,
-  RefreshCw,
-  LayoutGrid,
-  Columns4,
-  Columns2,
-  TableProperties
+  ArrowUpRight
 } from 'lucide-vue-next'
+import PageIntro from '../components/PageIntro.vue'
 
 const router = useRouter()
 const { ponds, setPond } = usePonds()
 const { showToast } = useToast()
 
-// View layout mode: 'cols-4' | 'cols-2' | 'table'
-const layoutMode = ref('cols-4')
 const isPingingAll = ref(false)
 const pingResults = ref({})
 
@@ -42,7 +31,7 @@ const nodes = computed(() => {
     const sensors = [
       { name: 'DO Probe', code: 'RS485-DO', val: `${pond.telemetry?.do || 6.2} mg/L`, ok: (pond.telemetry?.do || 6.2) >= 3.5 },
       { name: 'pH Sensor', code: 'RS485-pH', val: `${pond.telemetry?.ph || 7.5} pH`, ok: true },
-      { name: 'Temp Sensor', code: 'DS18B20', val: `${pond.telemetry?.temp || 28.5}°C`, ok: true }
+      { name: 'Temp Sensor', code: 'DS18B20', val: `${pond.telemetry?.temp || 28.5}Â°C`, ok: true }
     ]
 
     if (pond.telemetry?.flocSensor) {
@@ -135,7 +124,7 @@ const avgPingMs = computed(() => {
 const pingNode = (node) => {
   const newPing = Math.floor(Math.random() * 15) + 24
   pingResults.value[node.pondId] = newPing
-  showToast(`📡 Ping to ${node.id} (${node.ip}): ${newPing}ms RTT • Packet loss: 0%`, 'info')
+  showToast(`Ping to ${node.id} (${node.ip}): ${newPing} ms. Packet loss 0%.`, 'info')
 }
 
 const pingAllNodes = () => {
@@ -145,7 +134,7 @@ const pingAllNodes = () => {
       pingResults.value[n.pondId] = Math.floor(Math.random() * 18) + 22
     })
     isPingingAll.value = false
-    showToast(`✅ Polled all ${nodes.value.length} ESP32 nodes successfully. Average latency: ${avgPingMs.value}ms`, 'success')
+    showToast(`Checked all ${nodes.value.length} nodes. Average latency ${avgPingMs.value} ms.`, 'success')
   }, 400)
 }
 
@@ -159,65 +148,21 @@ const inspectNodePond = (pondId) => {
   <div class="hardware-view">
     <!-- View Header -->
     <div class="view-header">
-      <div class="header-left">
-        <div class="icon-box">
-          <Cpu :size="20" class="text-sky" />
-        </div>
-        <div>
-          <div class="title-with-badge">
-            <h2 class="view-title font-display">Hardware Nodes & Edge Microcontrollers</h2>
-            <span class="broker-badge font-mono">
-              <span class="pulse-dot online"></span>
-              MQTT 1883 • {{ avgPingMs }}ms Ping
-            </span>
-          </div>
-          <span class="view-sub font-mono">
-            ESP32-S3 telemetry topology, Modbus RS485 bus, and 16-channel actuator relays
-          </span>
-        </div>
-      </div>
-
-      <!-- Controls: Ping & View Mode Selector -->
+      <PageIntro
+        title="Equipment"
+        purpose="Controllers and sensors for each pond. This hardware is simulated."
+      />
       <div class="header-actions">
-        <button 
+        <button
           id="btn-ping-all-nodes"
-          class="btn-ping-all font-mono"
+          type="button"
+          class="btn-ping-all"
           :disabled="isPingingAll"
           @click="pingAllNodes"
         >
-          <RotateCw :size="13" :class="{ 'spin-anim': isPingingAll }" />
-          <span>{{ isPingingAll ? 'Pinging Nodes...' : 'Ping All Nodes' }}</span>
+          <RotateCw :size="13" :class="{ 'spin-anim': isPingingAll }" aria-hidden="true" />
+          <span>{{ isPingingAll ? 'Checking...' : 'Check all' }}</span>
         </button>
-
-        <div class="layout-toggle-group font-mono">
-          <button 
-            class="layout-btn" 
-            :class="{ active: layoutMode === 'cols-4' }"
-            title="Compact 4-Column Grid (Fits in screen)"
-            @click="layoutMode = 'cols-4'"
-          >
-            <Columns4 :size="14" />
-            <span class="toggle-text">Compact</span>
-          </button>
-          <button 
-            class="layout-btn" 
-            :class="{ active: layoutMode === 'cols-2' }"
-            title="Spacious 2-Column Grid"
-            @click="layoutMode = 'cols-2'"
-          >
-            <Columns2 :size="14" />
-            <span class="toggle-text">2-Col</span>
-          </button>
-          <button 
-            class="layout-btn" 
-            :class="{ active: layoutMode === 'table' }"
-            title="Diagnostic Table Matrix"
-            @click="layoutMode = 'table'"
-          >
-            <TableProperties :size="14" />
-            <span class="toggle-text">Table</span>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -265,11 +210,7 @@ const inspectNodePond = (pondId) => {
     </div>
 
     <!-- Mode A: Compact Cards Grid (Default 4-col or 2-col) -->
-    <div 
-      v-if="layoutMode !== 'table'" 
-      class="compact-nodes-grid"
-      :class="layoutMode"
-    >
+    <div class="compact-nodes-grid">
       <div 
         v-for="node in nodes" 
         :key="node.id" 
@@ -281,7 +222,7 @@ const inspectNodePond = (pondId) => {
             <span class="c-pond-tag font-mono">{{ node.pondId }}</span>
             <div class="c-title-wrap">
               <span class="c-node-title font-display">{{ node.id }}</span>
-              <span class="c-pond-sub font-mono">{{ node.pondName.split('—')[1]?.trim() || node.pondName }}</span>
+              <span class="c-pond-sub">{{ node.pondName.split('—')[1]?.trim() || node.pondName }}</span>
             </div>
           </div>
           <div class="c-head-right font-mono">
@@ -378,93 +319,6 @@ const inspectNodePond = (pondId) => {
       </div>
     </div>
 
-    <!-- Mode B: Diagnostic Table (Compact Matrix Table View) -->
-    <div v-else class="diagnostic-table-card glass-panel font-mono">
-      <table class="diag-table">
-        <thead>
-          <tr>
-            <th style="width: 140px;">Node ID & Pond</th>
-            <th style="width: 130px;">IP / MAC</th>
-            <th style="width: 110px;">Signal / Ping</th>
-            <th style="width: 110px;">Status / Up</th>
-            <th>RS485 Telemetry Channels</th>
-            <th>Actuator Relay States</th>
-            <th style="width: 140px; text-align: right;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="node in nodes" :key="node.id">
-            <!-- Node & Pond -->
-            <td>
-              <div class="diag-node-col">
-                <span class="d-id font-bold">{{ node.id }}</span>
-                <span class="d-pond text-muted">{{ node.pondName }}</span>
-              </div>
-            </td>
-
-            <!-- IP / MAC -->
-            <td>
-              <span class="d-ip font-bold">{{ node.ip }}</span>
-              <span class="d-mac text-muted">{{ node.mac }}</span>
-            </td>
-
-            <!-- Signal / Ping -->
-            <td>
-              <span class="d-rssi text-emerald font-bold">{{ node.rssi }}</span>
-              <span class="d-ping text-muted">{{ node.pingMs }}ms RTT</span>
-            </td>
-
-            <!-- Status / Up -->
-            <td>
-              <span class="status-chip online">
-                <span class="pulse-dot online"></span>
-                {{ node.status }}
-              </span>
-              <span class="d-up text-muted">{{ node.uptime }}</span>
-            </td>
-
-            <!-- Sensors -->
-            <td>
-              <div class="diag-chips-row">
-                <span 
-                  v-for="(s, sIdx) in node.sensors" 
-                  :key="sIdx" 
-                  class="diag-chip sensor"
-                >
-                  {{ s.name }}: <strong>{{ s.val }}</strong>
-                </span>
-              </div>
-            </td>
-
-            <!-- Relays -->
-            <td>
-              <div class="diag-chips-row">
-                <span 
-                  v-for="r in node.relays" 
-                  :key="r.id" 
-                  class="diag-chip relay"
-                  :class="{ active: r.active }"
-                >
-                  {{ r.id }} ({{ r.name }}): {{ r.active ? 'ON' : 'OFF' }}
-                </span>
-              </div>
-            </td>
-
-            <!-- Actions -->
-            <td style="text-align: right;">
-              <div class="diag-act-row">
-                <button class="btn-diag-ping" @click="pingNode(node)">
-                  Ping
-                </button>
-                <button class="btn-diag-inspect" @click="inspectNodePond(node.pondId)">
-                  Inspect
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 </template>
 
@@ -667,14 +521,7 @@ const inspectNodePond = (pondId) => {
 .compact-nodes-grid {
   display: grid;
   gap: 12px;
-}
-
-.compact-nodes-grid.cols-4 {
   grid-template-columns: repeat(4, 1fr);
-}
-
-.compact-nodes-grid.cols-2 {
-  grid-template-columns: repeat(2, 1fr);
 }
 
 .compact-node-card {
@@ -1061,7 +908,7 @@ const inspectNodePond = (pondId) => {
 
 /* Responsive */
 @media (max-width: 1400px) {
-  .compact-nodes-grid.cols-4 {
+  .compact-nodes-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -1070,8 +917,7 @@ const inspectNodePond = (pondId) => {
   .summary-kpis-bar {
     grid-template-columns: repeat(2, 1fr);
   }
-  .compact-nodes-grid.cols-4,
-  .compact-nodes-grid.cols-2 {
+  .compact-nodes-grid {
     grid-template-columns: 1fr;
   }
   .toggle-text {
