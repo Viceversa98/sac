@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import PondSelector from '../components/PondSelector.vue'
 import TelemetryCards from '../components/TelemetryCards.vue'
 import TodayExecutionSchedule from '../components/TodayExecutionSchedule.vue'
@@ -7,6 +8,12 @@ import ActuatorMatrix from '../components/ActuatorMatrix.vue'
 import TelemetryChart from '../components/TelemetryChart.vue'
 import SimulatedBanner from '../components/SimulatedBanner.vue'
 import PageIntro from '../components/PageIntro.vue'
+import PondVerdict from '../components/PondVerdict.vue'
+import { usePonds } from '../composables/usePonds'
+import { assessPond } from '../pondHealth'
+
+const { activePond } = usePonds()
+const health = computed(() => assessPond(activePond.value))
 </script>
 
 <template>
@@ -16,6 +23,11 @@ import PageIntro from '../components/PageIntro.vue'
       title="Water"
       purpose="Readings for the selected pond. The chart is replayed data."
     />
+
+    <section class="water-verdict" :aria-label="'Health for ' + activePond.name">
+      <h2 class="water-verdict-title">{{ activePond.id }} {{ activePond.name }}</h2>
+      <PondVerdict :assessment="health" />
+    </section>
 
     <!-- Pond Selector Bar (Unified & Interactive) -->
     <PondSelector />
@@ -42,6 +54,21 @@ import PageIntro from '../components/PageIntro.vue'
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.water-verdict {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.water-verdict-title {
+  margin: 0 0 8px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .view-header {

@@ -13,22 +13,23 @@
 .simulated-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin: 0;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 8px;
-  border: 1px solid var(--amber-600);
-  background: var(--amber-50);
-  color: var(--amber-700);
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.35;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .simulated-banner strong {
   font-family: var(--font-sans);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 </style>

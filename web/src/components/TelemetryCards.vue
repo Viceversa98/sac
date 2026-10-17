@@ -505,11 +505,11 @@ const estimatedBiomass = computed(() => {
   transition: width 0.5s ease;
 }
 
-.gauge-fill.do { background: linear-gradient(90deg, #0284c7, #38bdf8); }
-.gauge-fill.ph { background: linear-gradient(90deg, #059669, #34d399); }
-.gauge-fill.temp { background: linear-gradient(90deg, #d97706, #fbbf24); }
-.gauge-fill.ammonia { background: linear-gradient(90deg, #059669, #e11d48); }
-.gauge-fill.floc { background: linear-gradient(90deg, #0284c7, #059669); }
+.gauge-fill.do { background: var(--sky-600); }
+.gauge-fill.ph { background: var(--emerald-600); }
+.gauge-fill.temp { background: var(--amber-600); }
+.gauge-fill.ammonia { background: var(--rose-600); }
+.gauge-fill.floc { background: var(--sky-700); }
 
 .gauge-target-marker {
   position: absolute;

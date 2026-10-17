@@ -95,13 +95,10 @@ const handleResetDemo = async () => {
 
 .simulated-label {
   margin: 0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--emerald-50);
-  border: 1px solid var(--emerald-600);
-  color: var(--emerald-700);
-  font-size: 0.82rem;
-  font-weight: 700;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .header-actions-group {
@@ -116,18 +113,20 @@ const handleResetDemo = async () => {
 .btn-simulator {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
   border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
+  border: 1px solid var(--border-medium);
+  background: #ffffff;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.btn-reset-demo {
-  background: var(--amber-50);
-  border: 1px solid var(--amber-600);
-  color: var(--amber-700);
-  cursor: pointer;
+.btn-reset-demo:hover {
+  background: var(--bg-surface-subtle);
 }
 
 .btn-reset-demo:disabled {
@@ -141,13 +140,10 @@ const handleResetDemo = async () => {
   font-weight: 700;
 }
 
-.btn-simulator {
-  background: var(--sky-50);
-  border: 1px solid var(--sky-600);
-  color: var(--sky-700);
+.btn-simulator:hover {
+  background: var(--bg-surface-subtle);
 }
 
-.btn-simulator:hover,
 .btn-simulator.active {
   background: var(--sky-600);
   color: #ffffff;

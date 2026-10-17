@@ -226,10 +226,7 @@ const inspectNodePond = (pondId) => {
             </div>
           </div>
           <div class="c-head-right font-mono">
-            <span class="status-chip online">
-              <span class="pulse-dot online"></span>
-              {{ node.status }}
-            </span>
+            <span class="status-chip online">{{ node.status }}</span>
           </div>
         </div>
 
@@ -333,12 +330,8 @@ const inspectNodePond = (pondId) => {
 .view-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 12px 18px;
-  box-shadow: var(--shadow-xs);
+  align-items: flex-end;
+  gap: 16px;
 }
 
 .header-left {
@@ -929,7 +922,7 @@ const inspectNodePond = (pondId) => {
   .view-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 16px;
   }
   .summary-kpis-bar {
     grid-template-columns: 1fr;

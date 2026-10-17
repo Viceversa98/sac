@@ -658,7 +658,7 @@ const svgPathString = computed(() => {
 
 .prog-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  background: var(--sky-600);
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -768,7 +768,7 @@ const svgPathString = computed(() => {
 }
 
 .comp-box.highlight {
-  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  background: var(--sky-50);
   border-color: var(--sky-200);
 }
 
@@ -1033,7 +1033,7 @@ const svgPathString = computed(() => {
   padding: 8px 18px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  background: var(--amber-700);
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;

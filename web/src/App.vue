@@ -61,9 +61,9 @@ const toggleSimulator = () => {
 }
 
 .page-body {
-  padding: 76px 32px 48px;
+  padding: 80px 32px 48px;
   flex: 1;
-  max-width: 1600px;
+  max-width: 1440px;
   width: 100%;
 }
 

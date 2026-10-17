@@ -87,23 +87,29 @@ const calculatedDeficit = computed(() => {
         <div class="form-group">
           <label>Organic Carbon Source:</label>
           <div class="radio-pills">
-            <button 
-              class="radio-btn" 
-              :class="{ active: carbonSource === 'molasses' }" 
+            <button
+              type="button"
+              class="radio-btn"
+              :class="{ active: carbonSource === 'molasses' }"
+              :aria-pressed="carbonSource === 'molasses'"
               @click="carbonSource = 'molasses'"
             >
               Cane Molasses (40% C)
             </button>
-            <button 
-              class="radio-btn" 
-              :class="{ active: carbonSource === 'tapioca' }" 
+            <button
+              type="button"
+              class="radio-btn"
+              :class="{ active: carbonSource === 'tapioca' }"
+              :aria-pressed="carbonSource === 'tapioca'"
               @click="carbonSource = 'tapioca'"
             >
               Tapioca Flour (45% C)
             </button>
-            <button 
-              class="radio-btn" 
-              :class="{ active: carbonSource === 'wheat' }" 
+            <button
+              type="button"
+              class="radio-btn"
+              :class="{ active: carbonSource === 'wheat' }"
+              :aria-pressed="carbonSource === 'wheat'"
               @click="carbonSource = 'wheat'"
             >
               Fine Wheat Bran (50% C)
@@ -142,7 +148,7 @@ const calculatedDeficit = computed(() => {
 
         <div class="sop-guide-box">
           <div class="guide-title">
-            <CheckCircle2 :size="16" class="text-emerald" />
+            <CheckCircle2 :size="16" class="text-emerald" aria-hidden="true" />
             <span>Field Application Guidelines (SOP):</span>
           </div>
           <p class="guide-text">
@@ -158,18 +164,14 @@ const calculatedDeficit = computed(() => {
 .calculator-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .view-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: var(--shadow-xs);
+  align-items: flex-end;
+  gap: 16px;
 }
 
 .header-left {
@@ -206,39 +208,40 @@ const calculatedDeficit = computed(() => {
 .calc-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
 }
 
 .calc-card {
   background: #ffffff;
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  padding: 22px 24px;
-  box-shadow: var(--shadow-xs);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .card-title {
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text-primary);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .label-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.82rem;
+  gap: 8px;
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -259,8 +262,9 @@ const calculatedDeficit = computed(() => {
 }
 
 .input-hint {
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .radio-pills {
@@ -271,13 +275,15 @@ const calculatedDeficit = computed(() => {
 
 .radio-btn {
   flex: 1;
-  padding: 8px 10px;
+  min-height: 40px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   background: var(--bg-surface-subtle);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
+  cursor: pointer;
 }
 
 .radio-btn.active {
@@ -312,7 +318,7 @@ const calculatedDeficit = computed(() => {
 }
 
 .big-number {
-  font-size: 2.5rem;
+  font-size: var(--text-2xl);
   font-weight: 800;
   line-height: 1.1;
 }
@@ -371,6 +377,12 @@ const calculatedDeficit = computed(() => {
 @media (max-width: 1024px) {
   .calc-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .radio-pills {
+    flex-direction: column;
   }
 }
 </style>

@@ -357,8 +357,8 @@ const handleExecuteEarly = (session) => {
   border-radius: 999px;
   transition: width 0.4s ease;
 }
-.prog-fill.feed { background: linear-gradient(90deg, #0284c7, #38bdf8); }
-.prog-fill.molasses { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.prog-fill.feed { background: var(--sky-600); }
+.prog-fill.molasses { background: var(--amber-600); }
 
 .prog-sub {
   display: flex;
@@ -437,7 +437,6 @@ const handleExecuteEarly = (session) => {
 .timeline-node.upcoming {
   background: var(--sky-100);
   color: var(--sky-700);
-  animation: pulse-node 2s infinite ease-in-out;
 }
 .timeline-node.scheduled {
   background: var(--bg-surface-subtle);
