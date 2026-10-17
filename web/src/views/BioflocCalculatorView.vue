@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { FlaskConical, Calculator, Sparkles, BookOpen, CheckCircle2, ArrowRight } from 'lucide-vue-next'
+import { CheckCircle2 } from 'lucide-vue-next'
+import PageIntro from '../components/PageIntro.vue'
 
 // Sliders and inputs
 const feedWeightKg = ref(15.0)
@@ -46,22 +47,16 @@ const calculatedDeficit = computed(() => {
 <template>
   <div class="calculator-view">
     <div class="view-header">
-      <div class="header-left">
-        <div class="icon-box">
-          <FlaskConical :size="22" class="text-emerald" />
-        </div>
-        <div>
-          <h2 class="view-title font-display">Biofloc C:N Ratio & Carbon Dosing Calculator</h2>
-          <span class="view-sub">Precision biofloc formulation engine grounded in Avnimelech (2025) & SNI 7550:2009 standards</span>
-        </div>
-      </div>
-      <span class="badge badge-purple">Zero-Hallucination Biofloc Engine</span>
+      <PageIntro
+        title="Molasses"
+        purpose="Enter today’s feed. The result is grams to add after feeding."
+      />
     </div>
 
     <div class="calc-grid">
       <!-- Input Parameters Column -->
       <div class="calc-card glass-panel">
-        <h3 class="card-title">1. Daily Pond Input Parameters</h3>
+        <h3 class="card-title">Feed you entered</h3>
 
         <div class="form-group">
           <div class="label-row">
@@ -119,10 +114,10 @@ const calculatedDeficit = computed(() => {
 
       <!-- Result Column -->
       <div class="calc-card glass-panel highlight">
-        <h3 class="card-title">2. Calculation Results & Dosing Recommendation</h3>
+        <h3 class="card-title">Grams to add after feeding</h3>
 
         <div class="result-big-box">
-          <span class="result-label">DAILY MOLASSES REQUIREMENT:</span>
+          <span class="result-label">Grams to add after feeding</span>
           <div class="big-number-row font-mono">
             <span class="big-number text-emerald">{{ calculatedDeficit.molassesGrams.toLocaleString() }}</span>
             <span class="big-unit">grams / day</span>
@@ -294,7 +289,7 @@ const calculatedDeficit = computed(() => {
 
 /* Result box */
 .result-big-box {
-  background: linear-gradient(135deg, var(--emerald-50) 0%, #f0fdfa 100%);
+  background: var(--emerald-50);
   border: 1px solid var(--emerald-200);
   border-radius: 12px;
   padding: 18px 20px;

@@ -86,13 +86,13 @@ const pondCards = computed(() => {
         </div>
         <div>
           <div class="title-badge-row">
-            <h3 class="section-title font-display">Global Farm Cluster Analysis & Pond Selection</h3>
+            <h3 class="section-title">Choose a pond</h3>
             <span class="badge" :class="clusterHealth.badgeClass">
               <span class="pulse-dot" :class="clusterHealth.dotClass"></span>
               {{ clusterHealth.statusText }}
             </span>
           </div>
-          <span class="section-sub">Comparative biofloc synthesis across all {{ ponds.length }} production ponds • Click any pond to inspect deep telemetry below</span>
+          <span class="section-sub">Select a pond to read its water below.</span>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ const pondCards = computed(() => {
         title="Register new production pond to cluster"
       >
         <Plus :size="14" />
-        <span>Add Pond</span>
+        <span>Add a pond</span>
       </button>
     </div>
 
@@ -289,7 +289,7 @@ const pondCards = computed(() => {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: linear-gradient(135deg, #fbfaff 0%, #f0fdf4 100%);
+  background: var(--bg-surface);
   border: 1px solid var(--purple-100);
   border-left: 4px solid var(--purple-500);
   padding: 10px 14px;

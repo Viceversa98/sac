@@ -1,33 +1,47 @@
 <script setup>
-import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { usePonds } from '../composables/usePonds'
-import { 
-  LayoutDashboard, 
-  Layers, 
-  Cpu, 
-  FlaskConical, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Layers,
+  Cpu,
+  FlaskConical,
+  FileText,
   Waves,
-  Sparkles,
   Bot,
   Activity,
   Box
 } from 'lucide-vue-next'
 
 const route = useRoute()
-const { ponds } = usePonds()
 
-const navItems = computed(() => [
-  { id: 'dashboard', path: '/', label: 'Pond Overview', icon: LayoutDashboard, badge: null },
-  { id: 'telemetry', path: '/telemetry', label: 'Water & Telemetry', icon: Activity, badge: 'Sensors' },
-  { id: 'simulate', path: '/simulate', label: 'Pond Simulation', icon: Box, badge: '3D' },
-  { id: 'copilot', path: '/copilot', label: 'Co-Pilot', icon: Bot, badge: 'AI Assistant' },
-  { id: 'ponds', path: '/ponds', label: 'Ponds Fleet', icon: Layers, badge: `${ponds.value.length} Ponds` },
-  { id: 'hardware', path: '/hardware', label: 'Equipment & Sensors', icon: Cpu, badge: null },
-  { id: 'calculator', path: '/calculator', label: 'Molasses Calculator', icon: FlaskConical, badge: 'Biofloc' },
-  { id: 'audit', path: '/audit', label: 'Activity Log', icon: FileText, badge: null }
-])
+const navGroups = [
+  {
+    id: 'watch',
+    label: 'Watch',
+    items: [
+      { id: 'dashboard', path: '/', label: 'Overview', icon: LayoutDashboard },
+      { id: 'telemetry', path: '/telemetry', label: 'Water', icon: Activity },
+      { id: 'simulate', path: '/simulate', label: 'Pond picture', icon: Box }
+    ]
+  },
+  {
+    id: 'decide',
+    label: 'Decide',
+    items: [
+      { id: 'copilot', path: '/copilot', label: 'Co-pilot', icon: Bot },
+      { id: 'calculator', path: '/calculator', label: 'Molasses', icon: FlaskConical }
+    ]
+  },
+  {
+    id: 'records',
+    label: 'Records',
+    items: [
+      { id: 'ponds', path: '/ponds', label: 'Ponds', icon: Layers },
+      { id: 'hardware', path: '/hardware', label: 'Equipment', icon: Cpu },
+      { id: 'audit', path: '/audit', label: 'Log', icon: FileText }
+    ]
+  }
+]
 
 const isItemActive = (item) => {
   if (item.path === '/') {
@@ -39,75 +53,40 @@ const isItemActive = (item) => {
 
 <template>
   <aside class="app-sidebar">
-    <!-- Brand Logo -->
     <div class="sidebar-brand-box">
-      <div class="brand-logo-icon">
+      <div class="brand-logo-icon" aria-hidden="true">
         <Waves class="logo-icon" :size="20" />
       </div>
       <div class="brand-texts">
-        <div class="title-row">
-          <span class="brand-title font-display">SAMPAY</span>
-          <span class="version-tag">BIOFLOC</span>
-        </div>
-        <span class="brand-sub">Smart Tilapia Co-Pilot</span>
+        <span class="brand-title">Sampay</span>
+        <p class="brand-purpose">Watch ponds, decide the next dose, and record what happened.</p>
       </div>
     </div>
 
-    <!-- Navigation Section -->
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">MAIN MENU</div>
-      <ul class="nav-list">
-        <li v-for="item in navItems" :key="item.id">
-          <router-link 
-            :to="item.path"
-            :id="'nav-' + item.id"
-            class="nav-link"
-            :class="{ active: isItemActive(item) }"
-          >
-            <component :is="item.icon" class="nav-icon" :size="18" />
-            <span class="nav-label">{{ item.label }}</span>
-            <span v-if="item.badge" class="nav-badge" :class="item.id === 'copilot' ? 'badge-ai' : ''">
-              {{ item.badge }}
-            </span>
-          </router-link>
-        </li>
-      </ul>
+    <nav class="sidebar-nav" aria-label="Main">
+      <div v-for="group in navGroups" :key="group.id" class="nav-group">
+        <div class="nav-section-title">{{ group.label }}</div>
+        <ul class="nav-list">
+          <li v-for="item in group.items" :key="item.id">
+            <router-link
+              :to="item.path"
+              :id="'nav-' + item.id"
+              class="nav-link"
+              :class="{ active: isItemActive(item) }"
+            >
+              <component :is="item.icon" class="nav-icon" :size="18" aria-hidden="true" />
+              <span class="nav-label">{{ item.label }}</span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
     </nav>
-
-    <!-- Google Cloud AI Builder Cup Badge -->
-    <div class="competition-card">
-      <div class="comp-icon-row">
-        <Sparkles :size="15" class="text-sky" />
-        <span class="comp-title">Google Cloud AI Cup</span>
-      </div>
-      <p class="comp-desc">Autonomous AI Operating System for Biofloc Aquaculture</p>
-      <div class="comp-status font-mono">
-        <span class="pulse-dot online"></span>
-        <span>Gemini 2.5 Agent Ready</span>
-      </div>
-    </div>
-
-    <!-- Supervisor Profile Card -->
-    <div class="sidebar-footer">
-      <div class="operator-box">
-        <div class="operator-avatar">
-          <span>IH</span>
-        </div>
-        <div class="operator-details">
-          <span class="operator-name">Ilfa Hidayat</span>
-          <span class="operator-role">Farm Supervisor</span>
-        </div>
-      </div>
-      <div class="farm-meta">
-        <span>Location: Biofloc Unit #01</span>
-      </div>
-    </div>
   </aside>
 </template>
 
 <style scoped>
 .app-sidebar {
-  width: 270px;
+  width: 250px;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border-subtle);
   display: flex;
@@ -119,61 +98,47 @@ const isItemActive = (item) => {
   padding: 20px 16px;
   flex-shrink: 0;
   z-index: 100;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
 }
 
 .sidebar-brand-box {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding-bottom: 20px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .brand-logo-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--sky-500) 0%, var(--emerald-500) 100%);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--sky-600);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+  flex-shrink: 0;
 }
 
 .brand-texts {
   display: flex;
   flex-direction: column;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .brand-title {
-  font-size: 1.2rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
-.version-tag {
-  font-size: 0.62rem;
-  font-weight: 800;
-  background: var(--sky-100);
-  color: var(--sky-700);
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.05em;
-}
-
-.brand-sub {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+.brand-purpose {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -181,16 +146,16 @@ const isItemActive = (item) => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 16px;
   min-height: 0;
   overflow-y: auto;
 }
 
 .nav-section-title {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-subtle);
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
   padding-left: 10px;
 }
 
@@ -198,24 +163,22 @@ const isItemActive = (item) => {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .nav-link {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  border-radius: 9px;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-align: left;
   text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .nav-link:hover {
@@ -226,14 +189,14 @@ const isItemActive = (item) => {
 .nav-link.active {
   background: var(--sky-50);
   color: var(--sky-700);
-  font-weight: 700;
 }
+
 .nav-link.active .nav-icon {
-  color: var(--sky-600);
+  color: var(--sky-700);
 }
 
 .nav-icon {
-  color: var(--text-muted);
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
@@ -241,106 +204,36 @@ const isItemActive = (item) => {
   flex: 1;
 }
 
-.nav-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: var(--bg-surface-subtle);
-  color: var(--text-muted);
-}
+@media (max-width: 768px) {
+  .app-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 14px 12px;
+  }
 
-.nav-badge.badge-ai {
-  background: var(--purple-100);
-  color: var(--purple-700);
-}
+  .sidebar-nav {
+    overflow: visible;
+    gap: 10px;
+  }
 
-.competition-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
-  border: 1px solid var(--sky-100);
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 
-.comp-icon-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+  .nav-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
 
-.comp-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--sky-700);
-}
-
-.text-sky { color: var(--sky-600); }
-
-.comp-desc {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-}
-
-.comp-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.65rem;
-  color: var(--emerald-700);
-  margin-top: 4px;
-  font-weight: 600;
-}
-
-.sidebar-footer {
-  padding-top: 14px;
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.operator-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.operator-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: var(--sky-600);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.operator-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.operator-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.operator-role {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-}
-
-.farm-meta {
-  font-size: 0.68rem;
-  color: var(--text-subtle);
+  .nav-link {
+    width: auto;
+    padding: 8px 10px;
+  }
 }
 </style>

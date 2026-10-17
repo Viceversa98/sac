@@ -27,8 +27,8 @@ const handleScenario = (type, title) => {
       <div class="drawer-title-row">
         <SlidersHorizontal class="text-sky" :size="18" />
         <div>
-          <h4 class="drawer-title font-display">Farm Scenario Simulator (Jury Demo)</h4>
-          <span class="drawer-sub">Test how Co-Pilot and actuators react to extreme biofloc conditions</span>
+          <h4 class="drawer-title">Demo scenarios</h4>
+          <span class="drawer-sub">Change the simulated readings and see what the co-pilot suggests.</span>
         </div>
       </div>
 

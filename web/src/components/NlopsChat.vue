@@ -112,12 +112,10 @@ const formatMarkdown = (text) => {
         </div>
         <div class="profile-details">
           <div class="name-row">
-            <span class="assistant-name font-display">Co-Pilot</span>
-            <span class="badge badge-purple">AI Farm Assistant</span>
+            <span class="assistant-name">Co-pilot</span>
           </div>
           <span class="status-sub">
-            <span class="pulse-dot online mini"></span>
-            Online • Telemetry synthesis • Approval writes an audit row
+            Ask what a pond needs. Approve writes a log and does not control equipment.
           </span>
         </div>
       </div>
@@ -534,7 +532,7 @@ const formatMarkdown = (text) => {
 }
 
 .assistant .msg-body.briefing-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+  background: #ffffff;
   border: 1px solid var(--emerald-200);
   box-shadow: var(--shadow-xs);
 }

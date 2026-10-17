@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { AlertTriangle, Biohazard, Box, CheckCircle2, Utensils } from 'lucide-vue-next'
 import SimulatedBanner from '../components/SimulatedBanner.vue'
+import PageIntro from '../components/PageIntro.vue'
 import IsometricPond from '../components/IsometricPond.vue'
 import { usePonds } from '../composables/usePonds'
 import { buildEspNodes, dissolvedOxygenBand, expectedReactions } from '../pondHardware'
@@ -107,10 +108,11 @@ const handleCardLeave = (id) => {
           <div class="icon-box" aria-hidden="true">
             <Box :size="16" />
           </div>
-          <div class="title-copy">
-            <h2 class="view-title font-display">Isometric Pond Simulation</h2>
-            <p class="view-sub">Orthographic pond, ESP32 nodes, and live metrics. Scenarios write K04.</p>
-          </div>
+          <PageIntro
+            compact
+            title="Pond picture"
+            purpose="This is a diagram of probes and machines, not live hardware."
+          />
         </div>
 
         <div class="control-cluster">
@@ -815,6 +817,28 @@ const handleCardLeave = (id) => {
 
   .scenario-btn {
     max-width: 118px;
+  }
+}
+
+@media (max-width: 768px) {
+  .band-primary {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .control-cluster {
+    flex-wrap: wrap;
+  }
+
+  .stage-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 320px;
+  }
+
+  .stage {
+    min-height: 320px;
+    height: 360px;
   }
 }
 

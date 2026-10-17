@@ -24,6 +24,7 @@ import AddPondModal from '../components/AddPondModal.vue'
 import PondGrowthDetailModal from '../components/PondGrowthDetailModal.vue'
 import PondCycleActionModal from '../components/PondCycleActionModal.vue'
 import PondMortalityModal from '../components/PondMortalityModal.vue'
+import PageIntro from '../components/PageIntro.vue'
 
 const router = useRouter()
 const { ponds, selectedPondId, setPond, globalFarmMetrics } = usePonds()
@@ -99,20 +100,13 @@ const handleMortalityRecorded = () => {
   <div class="ponds-management-view">
     <!-- View Header -->
     <div class="view-header">
-      <div class="header-left">
-        <div class="icon-box">
-          <Layers :size="22" class="text-sky" />
-        </div>
-        <div>
-          <h2 class="view-title font-display">Pond Fleet & Biomass Management</h2>
-          <span class="view-sub font-mono">
-            Biomass growth tracking, fingerling stocking, harvesting & progressive grading across {{ ponds.length }} biofloc ponds
-          </span>
-        </div>
-      </div>
-      <button id="btn-open-add-pond-modal" class="btn-primary font-mono" @click="isAddModalOpen = true">
-        <Plus :size="16" />
-        <span>Register New Pond</span>
+      <PageIntro
+        title="Ponds"
+        purpose="Add a pond, record deaths, or end a cycle. The list below is the record."
+      />
+      <button id="btn-open-add-pond-modal" class="btn-primary" @click="isAddModalOpen = true">
+        <Plus :size="16" aria-hidden="true" />
+        <span>Add a pond</span>
       </button>
     </div>
 

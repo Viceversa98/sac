@@ -57,11 +57,11 @@ const toggleSimulator = () => {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  margin-left: 270px; /* Offset for fixed sidebar */
+  margin-left: 250px;
 }
 
 .page-body {
-  padding: 84px 32px 48px; /* Top padding 84px to clear 64px fixed header */
+  padding: 76px 32px 48px;
   flex: 1;
   max-width: 1600px;
   width: 100%;
@@ -101,7 +101,7 @@ const toggleSimulator = () => {
 
 @media (max-width: 1280px) {
   .main-content-wrapper {
-    margin-left: 240px;
+    margin-left: 250px;
   }
 }
 
@@ -119,9 +119,9 @@ const toggleSimulator = () => {
 }
 
 .layout-wrapper--fit .page-body {
-  margin-top: 64px;
-  height: calc(100vh - 64px);
-  max-height: calc(100vh - 64px);
+  margin-top: 56px;
+  height: calc(100vh - 56px);
+  max-height: calc(100vh - 56px);
   padding: 8px 14px 10px;
   overflow: hidden;
   max-width: none;
@@ -132,14 +132,25 @@ const toggleSimulator = () => {
 }
 
 @media (max-width: 768px) {
+  .layout-wrapper {
+    flex-direction: column;
+  }
   .main-content-wrapper {
     margin-left: 0;
   }
   .page-body {
-    padding: 80px 16px 32px;
+    padding: 16px 16px 32px;
+  }
+  .layout-wrapper--fit,
+  .layout-wrapper--fit .main-content-wrapper,
+  .layout-wrapper--fit .page-body {
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
   .layout-wrapper--fit .page-body {
-    padding: 8px 12px 8px;
+    margin-top: 0;
+    padding: 12px;
   }
 }
 </style>

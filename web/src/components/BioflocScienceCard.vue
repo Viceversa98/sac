@@ -37,8 +37,8 @@ const feedingRatePercent = computed(() => {
           <FlaskConical class="header-icon text-emerald" :size="18" />
         </div>
         <div>
-          <h3 class="panel-title font-display">Water Care & Biofloc Guidance</h3>
-          <span class="panel-sub font-mono">Microbial assimilation advice • {{ activePond.name }}</span>
+          <h3 class="panel-title">Biofloc guidance</h3>
+          <span class="panel-sub">How much carbon {{ activePond.name }} needs after feeding.</span>
         </div>
       </div>
 

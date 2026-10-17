@@ -5,31 +5,17 @@ import TodayExecutionSchedule from '../components/TodayExecutionSchedule.vue'
 import BioflocScienceCard from '../components/BioflocScienceCard.vue'
 import ActuatorMatrix from '../components/ActuatorMatrix.vue'
 import TelemetryChart from '../components/TelemetryChart.vue'
-import { Activity } from 'lucide-vue-next'
 import SimulatedBanner from '../components/SimulatedBanner.vue'
+import PageIntro from '../components/PageIntro.vue'
 </script>
 
 <template>
   <div class="water-telemetry-view">
     <SimulatedBanner />
-    <!-- View Header -->
-    <div class="view-header glass-panel">
-      <div class="header-left">
-        <div class="icon-box">
-          <Activity :size="22" class="text-sky" />
-        </div>
-        <div>
-          <h2 class="view-title font-display">Water Quality & Real-Time Telemetry</h2>
-          <span class="view-sub font-mono">
-            Replayed pond readings, 24-hour curves, and proposed actions. Nothing is sent to hardware.
-          </span>
-        </div>
-      </div>
-      <div class="header-status font-mono">
-        <span class="pulse-dot online"></span>
-        <span>SIMULATED feed</span>
-      </div>
-    </div>
+    <PageIntro
+      title="Water"
+      purpose="Readings for the selected pond. The chart is replayed data."
+    />
 
     <!-- Pond Selector Bar (Unified & Interactive) -->
     <PondSelector />

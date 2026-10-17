@@ -138,8 +138,8 @@ const handleExecuteEarly = (session) => {
           <CalendarClock class="header-icon text-sky" :size="18" />
         </div>
         <div>
-          <h3 class="panel-title font-display">Today's Execution Schedule & Action Plan</h3>
-          <span class="panel-sub font-mono">Planned feeding, molasses dosing & aeration windows • {{ activePond.name }}</span>
+          <h3 class="panel-title">Today’s plan</h3>
+          <span class="panel-sub">Feed and molasses windows for {{ activePond.name }}.</span>
         </div>
       </div>
       <div class="next-pill font-mono">
@@ -396,7 +396,7 @@ const handleExecuteEarly = (session) => {
 
 .timeline-item.upcoming {
   border-color: var(--sky-200);
-  background: linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%);
+  background: var(--sky-50);
 }
 
 .time-col {

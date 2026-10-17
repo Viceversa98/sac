@@ -129,7 +129,7 @@ const svgPathString = computed(() => {
           </div>
           <div>
             <div class="title-status-row">
-              <h3 class="modal-title font-display">{{ pond.name }} — Growth & Cycle Details</h3>
+              <h3 class="modal-title">{{ pond.name }} details</h3>
               <span 
                 class="status-pill font-mono" 
                 :class="pond.cycleStatus === 'HARVESTED' ? 'harvested' : (pond.cycleStatus === 'TRANSFERRED' ? 'transferred' : 'active')"
