@@ -6,7 +6,6 @@ import {
   Droplets, 
   Thermometer, 
   Biohazard, 
-  Check, 
   Activity, 
   Layers, 
   ChevronRight,
@@ -82,13 +81,12 @@ const pondCards = computed(() => {
     <div class="cluster-header">
       <div class="header-title-wrap">
         <div class="icon-avatar">
-          <Activity class="header-icon" :size="20" />
+          <Activity class="header-icon" :size="20" aria-hidden="true" />
         </div>
         <div>
           <div class="title-badge-row">
             <h3 class="section-title">Choose a pond</h3>
             <span class="badge" :class="clusterHealth.badgeClass">
-              <span class="pulse-dot" :class="clusterHealth.dotClass"></span>
               {{ clusterHealth.statusText }}
             </span>
           </div>
@@ -103,7 +101,7 @@ const pondCards = computed(() => {
         @click="isAddModalOpen = true"
         title="Register new production pond to cluster"
       >
-        <Plus :size="14" />
+        <Plus :size="14" aria-hidden="true" />
         <span>Add a pond</span>
       </button>
     </div>
@@ -125,7 +123,9 @@ const pondCards = computed(() => {
         v-for="pond in pondCards" 
         :key="pond.id"
         :id="'btn-pond-' + pond.id"
+        type="button"
         class="pond-tab-card"
+        :aria-pressed="selectedPondId === pond.id"
         :class="{ 
           active: selectedPondId === pond.id,
           'has-danger': pond.status === 'CRITICAL' || pond.status === 'KRITIS',
@@ -133,12 +133,6 @@ const pondCards = computed(() => {
         }"
         @click="setPond(pond.id)"
       >
-        <!-- Active inspection top banner -->
-        <div v-if="selectedPondId === pond.id" class="active-inspect-banner font-mono">
-          <Check :size="12" />
-          <span>CURRENTLY INSPECTING</span>
-        </div>
-
         <!-- Card Top Details -->
         <div class="card-head-row">
           <div class="pond-name-block">
@@ -350,16 +344,14 @@ const pondCards = computed(() => {
   border: 1px solid var(--border-subtle);
   border-radius: 10px;
   box-shadow: var(--shadow-xs);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 200ms ease, background-color 200ms ease;
   position: relative;
-  overflow: hidden;
+  cursor: pointer;
 }
 
 .pond-tab-card:hover {
   background: #ffffff;
-  border-color: var(--sky-400);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
+  border-color: var(--sky-600);
 }
 
 .pond-tab-card.active {
@@ -375,20 +367,6 @@ const pondCards = computed(() => {
 
 .pond-tab-card.has-warning {
   border-color: var(--amber-400);
-}
-
-/* Active Inspect Banner */
-.active-inspect-banner {
-  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%);
-  color: #ffffff;
-  font-size: 0.6rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  margin: -12px -14px 4px -14px;
-  letter-spacing: 0.04em;
 }
 
 .card-head-row {

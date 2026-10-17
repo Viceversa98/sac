@@ -655,7 +655,7 @@ const handleExecuteTransfer = () => {
 }
 
 .summary-box {
-  background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+  background: var(--bg-surface);
   border: 1px solid var(--emerald-200);
   border-radius: 10px;
   padding: 12px 14px;
@@ -807,7 +807,7 @@ const handleExecuteTransfer = () => {
 }
 
 .btn-action.harvest {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: var(--emerald-600);
   box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
 }
 
@@ -817,7 +817,7 @@ const handleExecuteTransfer = () => {
 }
 
 .btn-action.transfer {
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  background: var(--sky-600);
   box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
 }
 

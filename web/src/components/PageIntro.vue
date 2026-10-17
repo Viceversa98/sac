@@ -31,16 +31,17 @@ defineProps({
 .page-intro {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .page-intro-title {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 1.35rem;
+  font-size: var(--text-xl);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
@@ -48,16 +49,31 @@ defineProps({
 .page-intro-status {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 0.92rem;
-  line-height: 1.45;
+  font-size: var(--text-md);
+  line-height: 1.5;
   color: var(--text-secondary);
+  max-width: 68ch;
+}
+
+.page-intro-status {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .page-intro--compact .page-intro-title {
-  font-size: 1.05rem;
+  font-size: var(--text-lg);
 }
 
-.page-intro--compact .page-intro-purpose {
-  font-size: 0.82rem;
+.page-intro--compact .page-intro-purpose,
+.page-intro--compact .page-intro-status {
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 768px) {
+  .page-intro-purpose,
+  .page-intro--compact .page-intro-purpose {
+    font-size: var(--text-md);
+  }
 }
 </style>

@@ -722,7 +722,7 @@ const formatMarkdown = (text) => {
 }
 
 .thinking-sparkle {
-  animation: pulse 1.5s infinite;
+  display: inline-flex;
 }
 
 @keyframes pulse {

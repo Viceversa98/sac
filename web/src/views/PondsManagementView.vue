@@ -381,12 +381,8 @@ const handleMortalityRecorded = () => {
 .view-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 14px 18px;
-  box-shadow: var(--shadow-xs);
+  align-items: flex-end;
+  gap: 16px;
 }
 
 .header-left {
@@ -430,18 +426,16 @@ const handleMortalityRecorded = () => {
   padding: 8px 16px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  background: var(--sky-600);
   color: #ffffff;
-  font-size: 0.74rem;
-  font-weight: 800;
+  font-size: var(--text-sm);
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
-  transition: all 0.15s ease;
+  transition: background-color 200ms ease;
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+  background: var(--sky-700);
 }
 
 /* 4 Summary KPIs Grid */
@@ -670,7 +664,7 @@ const handleMortalityRecorded = () => {
 
 .prog-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  background: var(--sky-600);
   border-radius: 999px;
 }
 
@@ -787,6 +781,18 @@ const handleMortalityRecorded = () => {
 @media (max-width: 1024px) {
   .summary-kpis-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .summary-kpis-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

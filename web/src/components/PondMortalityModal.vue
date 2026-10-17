@@ -566,7 +566,7 @@ const handleSubmit = () => {
   padding: 8px 18px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  background: var(--rose-600);
   color: #ffffff;
   font-size: 0.74rem;
   font-weight: 800;

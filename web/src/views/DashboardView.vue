@@ -1,67 +1,51 @@
 <script setup>
 import { computed } from 'vue'
 import { usePonds } from '../composables/usePonds'
+import { assessPond } from '../pondHealth'
 import TodayExecutionSchedule from '../components/TodayExecutionSchedule.vue'
 import SimulatedBanner from '../components/SimulatedBanner.vue'
 import PageIntro from '../components/PageIntro.vue'
+import PondVerdict from '../components/PondVerdict.vue'
 
 const { ponds, globalFarmMetrics } = usePonds()
 
-const pondNeedsAttention = (pond) => {
-  const oxygen = pond.telemetry?.do ?? 6
-  const ammonia = pond.telemetry?.ammonia ?? 0
-  return oxygen < 5 || ammonia > 0.05
-}
+const verdictRank = { Unhealthy: 0, Watch: 1, Healthy: 2 }
 
-const attentionCount = computed(() => ponds.value.filter(pondNeedsAttention).length)
+const pondAssessments = computed(() => {
+  return ponds.value
+    .map((pond) => ({
+      ...pond,
+      health: assessPond(pond)
+    }))
+    .sort((left, right) => {
+      const rankGap = (verdictRank[left.health.verdict] ?? 9) - (verdictRank[right.health.verdict] ?? 9)
+      if (rankGap !== 0) return rankGap
+      return String(left.id).localeCompare(String(right.id))
+    })
+})
 
-const alertCount = computed(() => {
-  return ponds.value.filter((pond) => {
-    const oxygen = pond.telemetry?.do ?? 6
-    const ammonia = pond.telemetry?.ammonia ?? 0
-    return oxygen < 4 || ammonia > 0.07
-  }).length
+const pondsNeedingLook = computed(() => {
+  return pondAssessments.value.filter((pond) => pond.health.verdict !== 'Healthy')
+})
+
+const alertReadings = computed(() => {
+  return pondAssessments.value.flatMap((pond) => {
+    return pond.health.problems.map((problem) => ({
+      key: `${pond.id}-${problem.id}`,
+      pondId: pond.id,
+      pondName: pond.name,
+      label: problem.label,
+      value: problem.value,
+      call: problem.call,
+      reason: problem.reason
+    }))
+  })
 })
 
 const overviewStatus = computed(() => {
-  if (attentionCount.value === 0) return 'No pond needs attention right now.'
-  const count = attentionCount.value
+  if (pondsNeedingLook.value.length === 0) return 'No pond needs attention right now.'
+  const count = pondsNeedingLook.value.length
   return count === 1 ? '1 pond needs attention.' : `${count} ponds need attention.`
-})
-
-const pondAssessments = computed(() => {
-  return ponds.value.map((pond) => {
-    let status = 'Water is stable. Keep the daily check.'
-    let keyAction = 'Check this pond today.'
-
-    if (pond.id === 'K01') {
-      status = 'Ready to harvest. The fish are near the target weight.'
-      keyAction = 'Schedule a partial harvest of 300 kg and cut feed 10% before sampling.'
-    } else if (pond.id === 'K02') {
-      status = 'Growing well. Ammonia is low and the fish are using feed efficiently.'
-      keyAction = 'Keep aeration at 75% and add 600 g of molasses after the afternoon feed.'
-    } else if (pond.id === 'K03') {
-      status = 'The nursery is stable. Plan a size grade within five days.'
-      keyAction = 'Grade fish near 100 g within five days and move them to a grower pond.'
-    } else if (pond.id === 'K04') {
-      status = 'The biofloc is stable. Keep today’s feed and molasses plan.'
-      keyAction = 'Keep the plan: four feeds today and one molasses dose.'
-    } else if (pondNeedsAttention(pond)) {
-      status = 'This pond needs a closer look before the next feed.'
-      keyAction = 'Check oxygen and ammonia, then decide the next dose.'
-    }
-
-    const targetHarvestWeight = pond.targetHarvestWeightGrams || 850
-    const harvestProgress = Math.min(100, Math.round((pond.avgWeightGrams / targetHarvestWeight) * 100))
-
-    return {
-      ...pond,
-      status,
-      keyAction,
-      targetHarvestWeight,
-      harvestProgress
-    }
-  })
 })
 </script>
 
@@ -74,6 +58,27 @@ const pondAssessments = computed(() => {
       :status="overviewStatus"
     />
 
+    <div class="assessment-cards-grid">
+      <article
+        v-for="item in pondAssessments"
+        :key="item.id"
+        class="pond-card"
+        :class="`pond-card--${item.health.verdict.toLowerCase()}`"
+      >
+        <header class="card-head">
+          <div class="card-titles">
+            <span class="pond-id">{{ item.id }}</span>
+            <h2 class="pond-name">{{ item.name }}</h2>
+          </div>
+          <p class="glance-verdict" :class="`glance-verdict--${item.health.verdict.toLowerCase()}`">
+            {{ item.health.verdict }}
+          </p>
+        </header>
+        <PondVerdict :assessment="item.health" :hide-word="true" />
+      </article>
+    </div>
+
+    <h2 class="secondary-title">Farm totals</h2>
     <div class="farm-kpis">
       <div class="kpi-card">
         <span class="kpi-lbl">Fish weight</span>
@@ -84,57 +89,34 @@ const pondAssessments = computed(() => {
         <span class="kpi-num">{{ globalFarmMetrics.fcr }}</span>
         <span class="kpi-note">Lower is better.</span>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card kpi-card--list">
         <span class="kpi-lbl">Ponds that need attention</span>
-        <span class="kpi-num">{{ attentionCount }}</span>
+        <span class="kpi-num">{{ pondsNeedingLook.length }}</span>
+        <p v-if="pondsNeedingLook.length === 0" class="kpi-empty">None.</p>
+        <ul v-else class="kpi-list">
+          <li v-for="pond in pondsNeedingLook" :key="pond.id">
+            <span class="kpi-pond">{{ pond.id }} {{ pond.name }}</span>
+            <span class="kpi-verdict">{{ pond.health.verdict }}</span>
+            <span class="kpi-reason">{{ pond.health.reason }}</span>
+          </li>
+        </ul>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card kpi-card--list">
         <span class="kpi-lbl">Alerts</span>
-        <span class="kpi-num">{{ alertCount }}</span>
+        <span class="kpi-num">{{ alertReadings.length }}</span>
+        <p v-if="alertReadings.length === 0" class="kpi-empty">None.</p>
+        <ul v-else class="kpi-list">
+          <li v-for="alert in alertReadings" :key="alert.key">
+            <span class="kpi-pond">{{ alert.pondId }} {{ alert.pondName }}</span>
+            <span class="kpi-reason">{{ alert.label }} {{ alert.value }} is {{ alert.call.toLowerCase() }}.</span>
+          </li>
+        </ul>
       </div>
     </div>
 
     <p class="gloss">
       DO is dissolved oxygen. TAN is total ammonia. FCR is kilograms of feed for each kilogram of fish gained.
     </p>
-
-    <div class="assessment-cards-grid">
-      <article
-        v-for="item in pondAssessments"
-        :key="item.id"
-        class="pond-card"
-      >
-        <header class="card-head">
-          <span class="pond-id">{{ item.id }}</span>
-          <h2 class="pond-name">{{ item.name }}</h2>
-        </header>
-        <p class="pond-status">{{ item.status }}</p>
-        <dl class="readings">
-          <div>
-            <dt>Oxygen (DO)</dt>
-            <dd>{{ item.telemetry?.do || 6.2 }} mg/L</dd>
-          </div>
-          <div>
-            <dt>Ammonia (TAN)</dt>
-            <dd>{{ item.telemetry?.ammonia || 0.02 }} mg/L</dd>
-          </div>
-        </dl>
-        <div class="harvest">
-          <div class="harvest-head">
-            <span>Harvest progress</span>
-            <span>{{ item.harvestProgress }}%</span>
-          </div>
-          <div class="prog-track" role="progressbar" :aria-valuenow="item.harvestProgress" aria-valuemin="0" aria-valuemax="100" :aria-label="'Harvest progress for ' + item.name">
-            <div class="prog-fill" :style="{ width: item.harvestProgress + '%' }"></div>
-          </div>
-          <span class="harvest-detail">{{ item.avgWeightGrams }} g of {{ item.targetHarvestWeight }} g</span>
-        </div>
-        <p class="today-action">
-          <span class="today-label">Today’s action</span>
-          {{ item.keyAction }}
-        </p>
-      </article>
-    </div>
 
     <TodayExecutionSchedule />
   </div>
@@ -149,18 +131,23 @@ const pondAssessments = computed(() => {
 
 .farm-kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.kpi-card--list {
+  grid-column: 1 / -1;
 }
 
 .kpi-card {
   background: #ffffff;
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .kpi-lbl,
@@ -172,69 +159,160 @@ const pondAssessments = computed(() => {
 }
 
 .kpi-lbl {
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   font-weight: 600;
+}
+
+.secondary-title {
+  margin: 8px 0 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
 }
 
 .kpi-num {
   font-family: var(--font-mono);
-  font-size: 1.35rem;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.kpi-note,
+.kpi-empty,
+.kpi-reason {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.kpi-empty {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.kpi-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.kpi-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.kpi-pond,
+.kpi-verdict,
+.kpi-reason {
+  overflow-wrap: anywhere;
+}
+
+.kpi-pond,
+.kpi-verdict {
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text-primary);
 }
 
-.kpi-note {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
 .gloss {
   margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.45;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 68ch;
 }
 
 .assessment-cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 24px;
 }
 
 .pond-card {
   background: #ffffff;
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 8px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pond-card--watch {
+  border-color: var(--amber-700);
+}
+
+.pond-card--unhealthy {
+  border-color: var(--rose-700);
 }
 
 .card-head {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.card-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .pond-id {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--sky-700);
 }
 
 .pond-name {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
+  line-height: 1.2;
   color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.glance-verdict {
+  margin: 0;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.glance-verdict--healthy {
+  background: var(--emerald-50);
+  color: var(--emerald-800);
+}
+
+.glance-verdict--watch {
+  background: var(--amber-50);
+  color: var(--amber-800);
+}
+
+.glance-verdict--unhealthy {
+  background: var(--rose-50);
+  color: var(--rose-800);
 }
 
 .pond-status,
 .today-action {
   margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-size: var(--text-md);
+  line-height: 1.5;
   color: var(--text-primary);
 }
 
@@ -248,13 +326,13 @@ const pondAssessments = computed(() => {
 .readings div {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .readings dt,
 .harvest-head,
 .today-label {
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -262,7 +340,7 @@ const pondAssessments = computed(() => {
 .readings dd {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -283,7 +361,7 @@ const pondAssessments = computed(() => {
   border-radius: 999px;
   background: var(--bg-surface-subtle);
   overflow: hidden;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .prog-fill {
@@ -294,7 +372,7 @@ const pondAssessments = computed(() => {
 .harvest-detail {
   display: block;
   margin-top: 4px;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 .today-action {
@@ -311,6 +389,14 @@ const pondAssessments = computed(() => {
   .farm-kpis,
   .assessment-cards-grid {
     grid-template-columns: 1fr;
+  }
+
+  .card-head {
+    flex-wrap: wrap;
+  }
+
+  .kpi-card--list {
+    grid-column: auto;
   }
 }
 </style>

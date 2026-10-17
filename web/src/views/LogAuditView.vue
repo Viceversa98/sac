@@ -325,7 +325,8 @@ const exportLogsCsv = () => {
 .view-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  gap: 16px;
 }
 
 .header-left {
@@ -686,6 +687,12 @@ const exportLogsCsv = () => {
 }
 
 @media (max-width: 768px) {
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
   .farm-aggregations-grid {
     grid-template-columns: 1fr;
   }

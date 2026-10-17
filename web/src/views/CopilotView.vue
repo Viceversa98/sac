@@ -27,6 +27,6 @@ import PageIntro from '../components/PageIntro.vue'
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 </style>

@@ -555,7 +555,7 @@ const handleSubmit = () => {
 
 /* Biomass Summary Card */
 .biomass-summary-card {
-  background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+  background: var(--bg-surface);
   border: 1px solid var(--emerald-200);
   border-radius: 10px;
   padding: 12px 14px;
@@ -645,7 +645,7 @@ const handleSubmit = () => {
   padding: 8px 20px;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  background: var(--sky-600);
   color: #ffffff;
   font-size: 0.75rem;
   font-weight: 800;

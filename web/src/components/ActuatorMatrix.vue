@@ -127,7 +127,6 @@ const handleEmergencyFlush = () => {
         </div>
       </div>
       <div class="status-summary font-mono">
-        <span class="pulse-dot online"></span>
         <span>4 Actuator Nodes Linked via MQTT</span>
       </div>
     </div>

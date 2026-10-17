@@ -95,7 +95,7 @@ const isItemActive = (item) => {
   position: fixed;
   top: 0;
   left: 0;
-  padding: 20px 16px;
+  padding: 16px;
   flex-shrink: 0;
   z-index: 100;
 }
@@ -103,7 +103,7 @@ const isItemActive = (item) => {
 .sidebar-brand-box {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 16px;
@@ -129,14 +129,14 @@ const isItemActive = (item) => {
 }
 
 .brand-title {
-  font-size: 1.05rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .brand-purpose {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
   color: var(--text-secondary);
   font-weight: 500;
@@ -152,11 +152,11 @@ const isItemActive = (item) => {
 }
 
 .nav-section-title {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--text-secondary);
-  margin-bottom: 6px;
-  padding-left: 10px;
+  margin-bottom: 8px;
+  padding-left: 8px;
 }
 
 .nav-list {
@@ -170,13 +170,14 @@ const isItemActive = (item) => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
+  gap: 8px;
+  padding: 8px 12px;
   border-radius: 8px;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   font-weight: 600;
+  transition: background-color 200ms ease, color 200ms ease;
   text-align: left;
   text-decoration: none;
 }
@@ -205,35 +206,39 @@ const isItemActive = (item) => {
 }
 
 @media (max-width: 768px) {
+  .brand-purpose {
+    font-size: var(--text-md);
+  }
+
   .app-sidebar {
     position: relative;
     width: 100%;
     height: auto;
     border-right: none;
     border-bottom: 1px solid var(--border-subtle);
-    padding: 14px 12px;
+    padding: 16px;
   }
 
   .sidebar-nav {
     overflow: visible;
-    gap: 10px;
+    gap: 16px;
   }
 
   .nav-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
   }
 
   .nav-list {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 8px;
   }
 
   .nav-link {
     width: auto;
-    padding: 8px 10px;
+    padding: 8px 12px;
   }
 }
 </style>
