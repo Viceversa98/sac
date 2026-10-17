@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { apiUrl } from '../api'
 
 const selectedPondId = ref('K04')
 const isLiveSimulationRunning = ref(true)
@@ -482,7 +483,7 @@ const applyApiPond = (apiPond) => {
 }
 
 const readPonds = async () => {
-  const response = await fetch('/api/ponds', { headers: { Accept: 'application/json' } })
+  const response = await fetch(apiUrl('/api/ponds'), { headers: { Accept: 'application/json' } })
   if (!response.ok) return null
   const data = await response.json()
   return Array.isArray(data.ponds) ? data.ponds : []
@@ -493,7 +494,7 @@ const refreshFromApi = async () => {
   if (!list) return false
   const empty = list.length > 0 && list.every((pond) => !pond.stats || pond.stats.count === 0)
   if (empty) {
-    await fetch('/api/telemetry/replay', {
+    await fetch(apiUrl('/api/telemetry/replay'), {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: '{}'

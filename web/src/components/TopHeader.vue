@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { apiUrl } from '../api'
 import { usePonds } from '../composables/usePonds'
 import { useToast } from '../composables/useToast'
 import { SlidersHorizontal, RotateCcw } from 'lucide-vue-next'
@@ -22,7 +23,7 @@ const handleResetDemo = async () => {
   isResetting.value = true
   resetError.value = ''
   try {
-    const response = await fetch('/api/demo/reset', {
+    const response = await fetch(apiUrl('/api/demo/reset'), {
       method: 'POST',
       headers: { Accept: 'application/json' }
     })

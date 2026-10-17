@@ -12,12 +12,27 @@ import { toolCallRoutes } from './routes/tool-calls.js';
 
 loadEnv();
 
+const allowOrigin = (origin: string): string => {
+  const configured = process.env.WEB_ORIGIN || 'http://localhost:5173';
+  if (configured === '*') return origin || '*';
+  const allowed = configured.split(',').map((item) => item.trim()).filter(Boolean);
+  if (!origin) return allowed[0];
+  if (allowed.includes(origin) || origin === 'http://localhost:5173') return origin;
+  try {
+    if (new URL(origin).hostname.endsWith('.run.app')) return origin;
+  } catch {
+    return allowed[0];
+  }
+  return allowed[0];
+};
+
 // WHY Hono: one small router for the Cloud Run service. Zod validates bodies before they touch MySQL or Gemini.
 export const app = new Hono();
 
 app.use('/api/*', cors({
-  origin: process.env.WEB_ORIGIN || 'http://localhost:5173',
+  origin: allowOrigin,
   allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Accept', 'Content-Type'],
 }));
 
 app.get('/healthz', (c) => c.text('ok'));

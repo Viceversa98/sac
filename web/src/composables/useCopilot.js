@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { apiUrl } from '../api'
 import { useToast } from './useToast'
 
 const nowLabel = () =>
@@ -76,7 +77,7 @@ export function useCopilot() {
     const path = decision === 'approve' ? 'approve' : 'reject'
 
     try {
-      const response = await fetch(`/api/tool-calls/${encodeURIComponent(toolCallId)}/${path}`, {
+      const response = await fetch(apiUrl(`/api/tool-calls/${encodeURIComponent(toolCallId)}/${path}`), {
         method: 'POST',
         headers: { Accept: 'application/json' }
       })
@@ -132,7 +133,7 @@ export function useCopilot() {
     const wantsBriefing = lower.includes('briefing') || lower.includes('morning') || lower.includes('ringkasan')
 
     try {
-      const response = await fetch(wantsBriefing ? '/api/briefings' : '/api/chat', {
+      const response = await fetch(apiUrl(wantsBriefing ? '/api/briefings' : '/api/chat'), {
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify(wantsBriefing ? { lang: 'id' } : { message: userText, lang: 'id' })
@@ -174,7 +175,7 @@ export function useCopilot() {
 
   const loadProposed = async () => {
     try {
-      const response = await fetch('/api/tool-calls?status=proposed', { headers: { Accept: 'application/json' } })
+      const response = await fetch(apiUrl('/api/tool-calls?status=proposed'), { headers: { Accept: 'application/json' } })
       if (!response.ok) return
       const data = await response.json()
       for (const call of data.tool_calls || []) {
