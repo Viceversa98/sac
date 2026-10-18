@@ -61,31 +61,59 @@ const overviewWord = (fact: Fact): string => {
 };
 
 const briefingLabel = (param: string): string => {
-  if (param.startsWith('do_')) return 'oxygen';
-  if (param.startsWith('tan_')) return 'ammonia';
-  if (param.startsWith('nh3_')) return 'ammonia (NH3)';
+  if (param.startsWith('do_')) return 'Oxygen';
+  if (param.startsWith('tan_')) return 'Ammonia (TAN)';
+  if (param.startsWith('nh3_')) return 'Ammonia (NH3)';
   if (param === 'ph_range') return 'pH';
-  if (param === 'temp_c_range') return 'temperature';
+  if (param === 'temp_c_range') return 'Temperature';
   return param;
 };
 
+const briefingClock = (time: string | null | undefined): string => {
+  if (!time) return '';
+  const match = time.match(/(\d{2}:\d{2})/);
+  return match ? ` at ${match[1]} WIB` : '';
+};
+
+const briefingValue = (fact: Fact): string => {
+  const raw = String(fact.value);
+  const range = raw.match(/^(-?\d+(?:\.\d+)?)-(-?\d+(?:\.\d+)?)$/);
+  if (range && range[1] === range[2]) return range[1];
+  return raw;
+};
+
+const briefingUnit = (param: string): string => {
+  if (param.startsWith('do_') || param.startsWith('tan_') || param.startsWith('nh3_')) return ' mg/L';
+  if (param === 'temp_c_range') return ' °C';
+  return '';
+};
+
+const briefingLines = (pondFacts: Fact[]): string[] => {
+  const minOxygen = pondFacts.find((fact) => fact.param === 'do_mgL_min');
+  const lastOxygen = pondFacts.find((fact) => fact.param === 'do_mgL_last');
+  const sameOxygen = minOxygen && lastOxygen && String(minOxygen.value) === String(lastOxygen.value);
+  const shown = pondFacts.filter((fact) => !(sameOxygen && fact.param === 'do_mgL_last'));
+  return shown.map((fact) => {
+    const when = fact.param.startsWith('do_') ? briefingClock(fact.time_wib) : '';
+    return `${briefingLabel(fact.param)} ${briefingValue(fact)}${briefingUnit(fact.param)}${when} — ${overviewWord(fact)}`;
+  });
+};
+
 export const fallbackBriefing = (_lang: 'id' | 'en', facts: Fact[]): string => {
-  const lines = ['Morning briefing. These simulated readings use the same bands as the Overview.'];
+  const lines = [
+    'Morning briefing.',
+    'These simulated readings use the same bands as the Overview.',
+    '',
+  ];
   for (const pondId of ['A', 'B']) {
     const pondFacts = facts.filter((fact) => fact.pond_id === pondId);
     if (pondFacts.length === 0) continue;
-    const bits = pondFacts.map((fact) => {
-      const when = fact.time_wib ? ` at ${fact.time_wib} WIB` : '';
-      const unit = fact.param.startsWith('do_') || fact.param.startsWith('tan_') || fact.param.startsWith('nh3_')
-        ? ' mg/L'
-        : fact.param === 'temp_c_range'
-          ? ' °C'
-          : '';
-      return `${briefingLabel(fact.param)} ${fact.value}${unit}${when}, ${overviewWord(fact)}`;
-    });
-    lines.push(`Pond ${pondId}: ${bits.join('; ')}.`);
+    lines.push(`Pond ${pondId}`);
+    lines.push(...briefingLines(pondFacts));
+    lines.push('');
   }
-  lines.push('Oxygen below 4.5 mg/L is the Overview watch band, not an SOP limit. The sourced aerator line is 3 mg/L. Critical is 1.0 mg/L.');
+  lines.push('Oxygen below 4.5 mg/L is the Overview watch band, not an SOP limit.');
+  lines.push('The sourced aerator line is 3 mg/L. Critical is 1.0 mg/L.');
   lines.push('Source: SOP-01 (Avnimelech 1999).');
   return lines.join('\n');
 };

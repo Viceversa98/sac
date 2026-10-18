@@ -96,9 +96,17 @@ const formatFactValue = (fact) => {
 
 const BRIEFING_SOURCE = 'Source: SOP-01 (Avnimelech 1999).'
 
+const readableBriefing = (text) => text
+  .replace(BRIEFING_SOURCE, '')
+  .replace(/; /g, '\n')
+  .replace(/Pond ([AB]): /g, '\nPond $1\n')
+  .replace(/ at \d{4}-\d{2}-\d{2} (\d{2}:\d{2}) WIB/g, ' at $1 WIB')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim()
+
 const displayText = (msg) => {
   let text = msg.text || ''
-  if (msg.isBriefing) text = text.replace(BRIEFING_SOURCE, '').trim()
+  if (msg.isBriefing) text = readableBriefing(text)
   const isNodeSummary = text.startsWith('Data SIMULATED.') || text.startsWith('SIMULATED data.')
   if (msg.facts?.length && isNodeSummary) return text.split('\n')[0]
   return text
@@ -553,6 +561,8 @@ const formatMarkdown = (text) => {
   background: #ffffff;
   border: 1px solid var(--emerald-200);
   box-shadow: var(--shadow-xs);
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
 .briefing-source {
