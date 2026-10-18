@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { usePonds } from '../composables/usePonds'
 import { useToast } from '../composables/useToast'
 import { 
@@ -12,12 +13,17 @@ import {
 } from 'lucide-vue-next'
 
 const emit = defineEmits(['close'])
-const { applyScenario, isLiveSimulationRunning } = usePonds()
+const { applyScenario, isLiveSimulationRunning, ponds } = usePonds()
 const { showToast } = useToast()
+const scenarioPondId = ref('A')
+
+const handleChoosePond = (pondId) => {
+  scenarioPondId.value = pondId
+}
 
 const handleScenario = (type, title) => {
-  const pond = applyScenario(type)
-  const name = pond?.name || 'Kolam A'
+  const pond = applyScenario(type, scenarioPondId.value)
+  const name = pond?.name || `Kolam ${scenarioPondId.value}`
   showToast(`Demo scenario: ${title} on ${name}`, 'warning', 4000)
 }
 </script>
@@ -35,6 +41,21 @@ const handleScenario = (type, title) => {
 
       <button class="btn-close" @click="emit('close')" title="Close simulator panel">
         <X :size="16" />
+      </button>
+    </div>
+
+    <div class="pond-choice" role="group" aria-label="Pond to test">
+      <button
+        v-for="pond in ponds"
+        :key="pond.id"
+        type="button"
+        class="pond-choice-btn"
+        :class="{ active: scenarioPondId === pond.id }"
+        :aria-pressed="scenarioPondId === pond.id"
+        :aria-label="`Test ${pond.name}`"
+        @click="handleChoosePond(pond.id)"
+      >
+        Kolam {{ pond.id }}
       </button>
     </div>
 
@@ -177,6 +198,29 @@ const handleScenario = (type, title) => {
 }
 .btn-close:hover {
   background: var(--bg-surface-subtle);
+  color: var(--text-primary);
+}
+
+.pond-choice {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pond-choice-btn {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface-subtle);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pond-choice-btn.active {
+  background: var(--sky-50, #f0f9ff);
+  border-color: var(--sky-400);
   color: var(--text-primary);
 }
 

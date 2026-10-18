@@ -262,7 +262,7 @@ const formatMarkdown = (text) => {
 
             <div v-else-if="msg.actionCard.status === 'approved'" class="hitl-status-resolved success">
               <CheckCircle2 :size="15" />
-              <span>Recorded as executed_simulated. No hardware command was sent.</span>
+              <span>Recorded. {{ msg.actionCard.resultNote || 'Simulated readings were updated.' }} No hardware command was sent.</span>
             </div>
             <div v-else class="hitl-status-resolved cancelled">
               <X :size="15" />

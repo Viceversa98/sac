@@ -4,28 +4,40 @@ import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopHeader from './components/TopHeader.vue'
 import ScenarioSimulatorBar from './components/ScenarioSimulatorBar.vue'
+import AgentChatSidebar from './components/AgentChatSidebar.vue'
 import ToastContainer from './components/ToastContainer.vue'
 
 const route = useRoute()
 const isSimulatorOpen = ref(false)
+const isAgentOpen = ref(false)
 const isViewportFit = computed(() => route.name === 'simulate')
 
 const toggleSimulator = () => {
   isSimulatorOpen.value = !isSimulatorOpen.value
 }
+
+const toggleAgent = () => {
+  isAgentOpen.value = !isAgentOpen.value
+}
+
+const handleCloseAgent = () => {
+  isAgentOpen.value = false
+}
 </script>
 
 <template>
-  <div class="layout-wrapper" :class="{ 'layout-wrapper--fit': isViewportFit }">
+  <div class="layout-wrapper" :class="{ 'layout-wrapper--fit': isViewportFit, 'layout-wrapper--agent': isAgentOpen }">
     <!-- Left Navigation Sidebar -->
     <Sidebar />
 
     <!-- Main Content Container with Fixed Top Header -->
     <div class="main-content-wrapper">
       <!-- Fixed Top Header Bar -->
-      <TopHeader 
-        :simulator-open="isSimulatorOpen" 
-        @toggle-simulator="toggleSimulator" 
+      <TopHeader
+        :simulator-open="isSimulatorOpen"
+        :agent-open="isAgentOpen"
+        @toggle-simulator="toggleSimulator"
+        @toggle-agent="toggleAgent"
       />
 
       <!-- Content Area with proper top padding for fixed header -->
@@ -35,10 +47,12 @@ const toggleSimulator = () => {
     </div>
 
     <!-- Floating Scenario Simulator Drawer -->
-    <ScenarioSimulatorBar 
-      v-if="isSimulatorOpen" 
-      @close="isSimulatorOpen = false" 
+    <ScenarioSimulatorBar
+      v-if="isSimulatorOpen"
+      @close="isSimulatorOpen = false"
     />
+
+    <AgentChatSidebar v-if="isAgentOpen" @close="handleCloseAgent" />
 
     <!-- Global Toast Container -->
     <ToastContainer />
@@ -111,6 +125,14 @@ const toggleSimulator = () => {
   overflow: hidden;
 }
 
+.layout-wrapper--agent .main-content-wrapper {
+  margin-right: 380px;
+}
+
+.layout-wrapper--agent :deep(.top-header-fixed) {
+  right: 380px;
+}
+
 .layout-wrapper--fit .main-content-wrapper {
   height: 100vh;
   max-height: 100vh;
@@ -137,6 +159,12 @@ const toggleSimulator = () => {
   }
   .main-content-wrapper {
     margin-left: 0;
+  }
+  .layout-wrapper--agent .main-content-wrapper {
+    margin-right: 0;
+  }
+  .layout-wrapper--agent :deep(.top-header-fixed) {
+    right: auto;
   }
   .page-body {
     padding: 16px 16px 32px;
