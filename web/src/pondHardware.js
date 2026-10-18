@@ -17,7 +17,7 @@ const formatNumber = (value, digits) => {
 
 const gatewayRadio = (pondId) => {
   const nodeNum = Number(String(pondId).replace(/\D/g, '')) || 4
-  const rssi = pondId === 'K04' ? '-52 dBm' : pondId === 'K01' ? '-58 dBm' : '-62 dBm'
+  const rssi = pondId === 'B' ? '-62 dBm' : '-58 dBm'
   return {
     ip: `192.168.1.${100 + nodeNum}`,
     rssi,

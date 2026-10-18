@@ -1,45 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { CheckCircle2 } from 'lucide-vue-next'
 import PageIntro from '../components/PageIntro.vue'
 
-// Sliders and inputs
-const feedWeightKg = ref(15.0)
-const crudeProteinPercent = ref(32)
-const carbonSource = ref('molasses') // molasses (40% C), tapioca (45% C), wheat (50% C)
-const targetCnRatio = ref(15)
-const pondVolumeM3 = ref(50)
+const tanMgL = ref(1)
+const pondVolumeM3 = ref(30)
+const CARB_FRACTION = 0.44
+const MAX_G_PER_L = 0.12
 
-const carbonPercent = computed(() => {
-  if (carbonSource.value === 'molasses') return 40
-  if (carbonSource.value === 'tapioca') return 45
-  return 50
-})
-
-// Biofloc Math based on Avnimelech (2025):
-// Feed Carbon = Feed Weight * 50% C
-// Feed Nitrogen = Feed Weight * (Crude Protein % / 6.25)
-// Unassimilated Nitrogen excreted by Tilapia = ~75% of Feed N
-// Carbon needed to assimilate excreted N at Target C/N = (Excreted N * Target C/N) - Available C
-const calculatedDeficit = computed(() => {
-  const feedKg = feedWeightKg.value
-  const cp = crudeProteinPercent.value / 100
-  const feedNitrogenKg = feedKg * (cp / 6.25)
-  const excretedNitrogenKg = feedNitrogenKg * 0.75
-
-  const targetRatio = targetCnRatio.value
-  const requiredCarbonKg = excretedNitrogenKg * targetRatio
-
-  // Molasses needed
-  const cFraction = carbonPercent.value / 100
-  const molassesNeededKg = requiredCarbonKg / cFraction
-  const molassesGrams = Math.round(molassesNeededKg * 1000)
-
+const dose = computed(() => {
+  const gramsPerM3 = (20 * tanMgL.value) / CARB_FRACTION
+  const gramsPerL = gramsPerM3 / 1000
+  const refused = gramsPerL > MAX_G_PER_L
+  const appliedPerL = refused ? MAX_G_PER_L : gramsPerL
+  const grams = Math.round(appliedPerL * pondVolumeM3.value * 1000)
   return {
-    feedNitrogenKg: (feedNitrogenKg * 1000).toFixed(0),
-    excretedNitrogenKg: (excretedNitrogenKg * 1000).toFixed(0),
-    molassesGrams,
-    costEstIdr: Math.round(molassesNeededKg * 6500) // Rp 6,500 / kg molasses
+    gramsPerM3: Number(gramsPerM3.toFixed(1)),
+    gramsPerL: Number(gramsPerL.toFixed(3)),
+    grams,
+    refused
   }
 })
 </script>
@@ -56,65 +35,23 @@ const calculatedDeficit = computed(() => {
     <div class="calc-grid">
       <!-- Input Parameters Column -->
       <div class="calc-card glass-panel">
-        <h3 class="card-title">Feed you entered</h3>
+        <h3 class="card-title">TAN to remove</h3>
 
         <div class="form-group">
           <div class="label-row">
-            <label>Daily Feed Weight:</label>
-            <span class="val-pill font-mono">{{ feedWeightKg }} kg</span>
+            <label for="tan-input">TAN (mg/L)</label>
+            <span class="val-pill font-mono">{{ tanMgL }} mg/L</span>
           </div>
-          <input type="range" v-model.number="feedWeightKg" min="5" max="100" step="0.5" class="slider" />
+          <input id="tan-input" type="range" v-model.number="tanMgL" min="0" max="3" step="0.1" class="slider" />
         </div>
 
         <div class="form-group">
           <div class="label-row">
-            <label>Feed Crude Protein (CP):</label>
-            <span class="val-pill font-mono">{{ crudeProteinPercent }}%</span>
+            <label for="volume-input">Pond volume</label>
+            <span class="val-pill font-mono">{{ pondVolumeM3 }} m³</span>
           </div>
-          <input type="range" v-model.number="crudeProteinPercent" min="20" max="45" step="1" class="slider" />
-          <span class="input-hint">Commercial tilapia biofloc feed standard: 28% – 32% CP</span>
-        </div>
-
-        <div class="form-group">
-          <div class="label-row">
-            <label>Target Biofloc C:N Ratio:</label>
-            <span class="val-pill font-mono">{{ targetCnRatio }} : 1</span>
-          </div>
-          <input type="range" v-model.number="targetCnRatio" min="10" max="20" step="1" class="slider" />
-          <span class="input-hint">15:1 ratio guarantees dominance of ammonia-assimilating heterotrophic bacteria</span>
-        </div>
-
-        <div class="form-group">
-          <label>Organic Carbon Source:</label>
-          <div class="radio-pills">
-            <button
-              type="button"
-              class="radio-btn"
-              :class="{ active: carbonSource === 'molasses' }"
-              :aria-pressed="carbonSource === 'molasses'"
-              @click="carbonSource = 'molasses'"
-            >
-              Cane Molasses (40% C)
-            </button>
-            <button
-              type="button"
-              class="radio-btn"
-              :class="{ active: carbonSource === 'tapioca' }"
-              :aria-pressed="carbonSource === 'tapioca'"
-              @click="carbonSource = 'tapioca'"
-            >
-              Tapioca Flour (45% C)
-            </button>
-            <button
-              type="button"
-              class="radio-btn"
-              :class="{ active: carbonSource === 'wheat' }"
-              :aria-pressed="carbonSource === 'wheat'"
-              @click="carbonSource = 'wheat'"
-            >
-              Fine Wheat Bran (50% C)
-            </button>
-          </div>
+          <input id="volume-input" type="range" v-model.number="pondVolumeM3" min="10" max="50" step="1" class="slider" />
+          <span class="input-hint">Grams per cubic metre = (20 × TAN) / 0.44. Anything above 0.12 g/L is refused.</span>
         </div>
       </div>
 
@@ -125,34 +62,24 @@ const calculatedDeficit = computed(() => {
         <div class="result-big-box">
           <span class="result-label">Grams to add after feeding</span>
           <div class="big-number-row font-mono">
-            <span class="big-number text-emerald">{{ calculatedDeficit.molassesGrams.toLocaleString() }}</span>
-            <span class="big-unit">grams / day</span>
+            <span class="big-number" :class="dose.refused ? 'text-rose' : 'text-emerald'">{{ dose.refused ? 'Refused' : dose.grams.toLocaleString() }}</span>
+            <span class="big-unit">{{ dose.refused ? 'above 0.12 g/L' : 'grams' }}</span>
           </div>
-          <span class="sub-cost font-mono">Substrate Cost Estimate: Rp {{ calculatedDeficit.costEstIdr.toLocaleString() }} / day</span>
-        </div>
-
-        <div class="breakdown-list font-mono">
-          <div class="breakdown-item">
-            <span>Total Nitrogen from Feed:</span>
-            <strong>{{ calculatedDeficit.feedNitrogenKg }} g N</strong>
-          </div>
-          <div class="breakdown-item">
-            <span>Dissolved Ammonia Excretion (75%):</span>
-            <strong class="text-amber">{{ calculatedDeficit.excretedNitrogenKg }} g TAN</strong>
-          </div>
-          <div class="breakdown-item">
-            <span>Net Organic Carbon Required (C:N {{ targetCnRatio }}:1):</span>
-            <strong class="text-sky">{{ (calculatedDeficit.excretedNitrogenKg * targetCnRatio).toFixed(0) }} g C</strong>
-          </div>
+          <span class="sub-cost font-mono">{{ dose.gramsPerM3 }} g/m³ · {{ dose.gramsPerL }} g/L</span>
         </div>
 
         <div class="sop-guide-box">
           <div class="guide-title">
             <CheckCircle2 :size="16" class="text-emerald" aria-hidden="true" />
-            <span>Field Application Guidelines (SOP):</span>
+            <span>{{ dose.refused ? 'Safety limit' : 'Within the limit' }}</span>
           </div>
           <p class="guide-text">
-            Dissolve <strong>{{ calculatedDeficit.molassesGrams }}g</strong> of molasses in 5 liters of pond water with probiotic yeast, ferment for 2 hours, then broadcast evenly in front of the aerator currents at 09:00 WIB following the morning feeding window.
+            <template v-if="dose.refused">
+              (20 × {{ tanMgL }}) / 0.44 is {{ dose.gramsPerL }} g/L. Doses above 0.12 g/L are refused.
+            </template>
+            <template v-else>
+              (20 × {{ tanMgL }}) / 0.44 is {{ dose.gramsPerM3 }} g/m³, which is {{ dose.gramsPerL }} g/L. In {{ pondVolumeM3 }} m³ that is {{ dose.grams }} g.
+            </template>
           </p>
         </div>
       </div>
@@ -191,6 +118,7 @@ const calculatedDeficit = computed(() => {
 }
 
 .text-emerald { color: var(--emerald-600); }
+.text-rose { color: var(--rose-600); }
 .text-amber { color: var(--amber-600); }
 .text-sky { color: var(--sky-600); }
 

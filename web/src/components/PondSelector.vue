@@ -56,14 +56,12 @@ const pondCards = computed(() => {
       assessmentNote = 'Hypoxia warning: Oxygen below safe threshold.'
     } else if (p.telemetry.ammonia > 0.04) {
       assessmentNote = 'Elevated TAN: Bacterial carbon deficit detected.'
-    } else if (p.id === 'K01') {
-      assessmentNote = 'Finisher stage (920g). Target harvest in 14 days.'
-    } else if (p.id === 'K02') {
-      assessmentNote = 'Grower stage (420g). Feeding response strong.'
-    } else if (p.id === 'K03') {
-      assessmentNote = 'Nursery fingerlings (85g). Oxygen demand steady.'
+    } else if (p.id === 'A') {
+      assessmentNote = 'Kolam A. Simulated tilapia biofloc, 30 m³.'
+    } else if (p.id === 'B') {
+      assessmentNote = 'Kolam B. Simulated tilapia biofloc, 30 m³.'
     } else {
-      assessmentNote = 'Core biofloc unit. Scheduled feed: 5.2 kg at 14:00.'
+      assessmentNote = 'Simulated pond.'
     }
 
     return {

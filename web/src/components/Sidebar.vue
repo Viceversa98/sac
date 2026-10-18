@@ -6,6 +6,7 @@ import {
   Cpu,
   FlaskConical,
   FileText,
+  Database,
   Waves,
   Bot,
   Activity,
@@ -38,7 +39,8 @@ const navGroups = [
     items: [
       { id: 'ponds', path: '/ponds', label: 'Ponds', icon: Layers },
       { id: 'hardware', path: '/hardware', label: 'Equipment', icon: Cpu },
-      { id: 'audit', path: '/audit', label: 'Log', icon: FileText }
+      { id: 'audit', path: '/audit', label: 'Log', icon: FileText },
+      { id: 'cloud', path: '/cloud', label: 'Cloud data', icon: Database }
     ]
   }
 ]

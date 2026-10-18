@@ -6,6 +6,7 @@ import PondsManagementView from '../views/PondsManagementView.vue'
 import HardwareNodesView from '../views/HardwareNodesView.vue'
 import BioflocCalculatorView from '../views/BioflocCalculatorView.vue'
 import LogAuditView from '../views/LogAuditView.vue'
+import CloudDataView from '../views/CloudDataView.vue'
 import PondSimulationView from '../views/PondSimulationView.vue'
 
 const routes = [
@@ -57,6 +58,12 @@ const routes = [
     name: 'audit',
     component: LogAuditView,
     meta: { title: 'Activity Log & Ledger — Sampay Biofloc' }
+  },
+  {
+    path: '/cloud',
+    name: 'cloud',
+    component: CloudDataView,
+    meta: { title: 'Cloud data — Sampay Biofloc' }
   },
   {
     path: '/:pathMatch(.*)*',

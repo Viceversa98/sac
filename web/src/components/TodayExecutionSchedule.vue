@@ -28,7 +28,7 @@ const scheduleData = computed(() => {
   const dispensedFeed = p.actuators.feeder.dispensedTodayKg || 22.4
   const feedPercent = Math.min(100, Math.round((dispensedFeed / targetFeed) * 100))
 
-  const targetMolasses = p.id === 'K04' ? 1050 : (p.id === 'K01' ? 800 : (p.id === 'K02' ? 600 : 350))
+  const targetMolasses = p.id === 'B' ? 600 : 800
   const dispensedMolasses = p.todayMolassesGrams || 700
   const molassesPercent = Math.min(100, Math.round((dispensedMolasses / targetMolasses) * 100))
 
@@ -96,7 +96,7 @@ const scheduleData = computed(() => {
       time: '21:00 WIB',
       category: 'AERATION',
       title: 'Night Aeration Boost Protocol',
-      doseText: 'Ramp VFD Blowers to 85% RPM',
+      doseText: 'Keep the aerator running',
       condition: 'Night algae & biofloc oxygen consumption',
       status: 'SCHEDULED',
       timingBadge: 'SCHEDULED • In ~4.5 hours',
@@ -225,19 +225,7 @@ const handleExecuteEarly = (session) => {
             <CheckCircle2 :size="11" />
             <span>COMPLETED</span>
           </span>
-          <div v-else-if="s.status === 'UPCOMING'" class="upcoming-wrap">
-            <span class="status-badge upcoming">{{ s.timingBadge }}</span>
-            <button 
-              v-if="s.canExecute"
-              :id="'btn-execute-' + s.id"
-              class="btn-trigger-early"
-              @click="handleExecuteEarly(s)"
-              title="Execute this scheduled action immediately"
-            >
-              <Zap :size="11" />
-              <span>Execute Now</span>
-            </button>
-          </div>
+          <span v-else-if="s.status === 'UPCOMING'" class="status-badge upcoming">{{ s.timingBadge }}</span>
           <span v-else class="status-badge scheduled">
             {{ s.timingBadge }}
           </span>

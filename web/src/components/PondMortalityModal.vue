@@ -176,12 +176,12 @@ const handleSubmit = () => {
           </label>
           <select id="mortality-cause" v-model="cause" class="form-select font-sans">
             <option value="Routine / Natural Mortality (Mortalitas Alami)">Routine / Natural Mortality (Mortalitas Wajar & Alami)</option>
-            <option value="Hypoxia / Low DO (Kekurangan Oksigen)">Hypoxia / Low DO Stress (Kekurangan Oksigen Terlarut)</option>
+            <option value="Hypoxia / Low DO">Low dissolved oxygen</option>
             <option value="Elevated Ammonia / TAN Deficit (Keracunan Amonia)">Elevated Ammonia / TAN Deficit (Keracunan Amonia)</option>
             <option value="Cannibalism / Physical Injury (Kanibalisme / Luka Fisik)">Cannibalism / Physical Injury (Kanibalisme / Gigitan)</option>
             <option value="Thermal Shock / Temp Fluctuation (Fluktuasi Suhu Ekstrem)">Thermal Shock / Extreme Temperature (Suhu Ekstrem)</option>
             <option value="Bacterial Infection / Fin Rot (Infeksi Bakteri)">Bacterial Infection / Fin Rot (Infeksi Bakteri / Busuk Sirip)</option>
-            <option value="Grading & Handling Stress (Stres Penanganan)">Grading & Handling Stress (Stres Pasca-Grading / Pindah)</option>
+            <option value="Grading and handling">Grading and handling</option>
           </select>
         </div>
 
@@ -207,7 +207,7 @@ const handleSubmit = () => {
             v-model="notes"
             type="text"
             class="form-input font-sans"
-            placeholder="e.g. Bangkai langsung diangkat dan aerasi kolam dinaikkan ke 85% RPM"
+            placeholder="For example: the fish were removed and the aerator was left running"
           />
         </div>
 

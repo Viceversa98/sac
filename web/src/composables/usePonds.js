@@ -1,19 +1,19 @@
 import { ref, computed } from 'vue'
 import { apiUrl } from '../api'
 
-const selectedPondId = ref('K04')
+const selectedPondId = ref('A')
 const isLiveSimulationRunning = ref(true)
 
 // Initial Ponds dataset with cumulative feed, molasses, initial stocking biomass for live FCR calculation
 const ponds = ref([
   {
-    id: 'K01',
-    name: 'Pond #1 — Finisher A',
+    id: 'A',
+    name: 'Kolam A (bioflok bundar)',
     species: 'Red Tilapia (Oreochromis niloticus)',
     phase: 'Finisher Stage (Ready for Harvest)',
     fishCount: 1850,
     avgWeightGrams: 920,
-    volumeM3: 50,
+    volumeM3: 30,
     status: 'OPTIMAL',
     healthScore: 98,
     initialBiomassKg: 460, // Initial fingerling stocking weight
@@ -59,20 +59,20 @@ const ponds = ref([
       }
     },
     actuators: {
-      feeder: { id: 'ESP32-K01-FD', name: 'Auto-Feeder #1', status: 'IDLE', dispensedTodayKg: 22.4, targetDailyKg: 48.0, nextSchedule: '14:00' },
-      aerator: { id: 'ESP32-K01-AR', name: 'VFD Aerator #1', status: 'RUNNING', powerPercent: 80, mode: 'AUTO' },
-      dosing: { id: 'ESP32-K01-DS', name: 'Molasses Valve', status: 'STANDBY', flowMlMin: 0 },
-      flush: { id: 'ESP32-K01-FLUSH', name: 'Emergency Siphon Valve', status: 'STANDBY', drainRateM3H: 15, lastFlushed: 'None (Zero-Exchange)' }
+      feeder: { id: 'sim-A-feeder', name: 'Feeder A', status: 'IDLE', dispensedTodayKg: 22.4, targetDailyKg: 48.0, nextSchedule: '14:00' },
+      aerator: { id: 'sim-A-aerator', name: 'Aerator A', status: 'RUNNING', powerPercent: 80, mode: 'SIMULATED' },
+      dosing: { id: 'sim-A-dose', name: 'Molasses valve A', status: 'STANDBY', flowMlMin: 0 },
+      flush: { id: 'sim-A-flush', name: 'Siphon A', status: 'STANDBY', drainRateM3H: 15, lastFlushed: 'Not flushed' }
     }
   },
   {
-    id: 'K02',
-    name: 'Pond #2 — Grower B',
+    id: 'B',
+    name: 'Kolam B (bioflok bundar)',
     species: 'Black Tilapia (Gift Strain)',
     phase: 'Grower Stage (Rapid Growth)',
     fishCount: 2200,
     avgWeightGrams: 420,
-    volumeM3: 50,
+    volumeM3: 30,
     status: 'OPTIMAL',
     healthScore: 94,
     initialBiomassKg: 280,
@@ -116,123 +116,10 @@ const ponds = ref([
       }
     },
     actuators: {
-      feeder: { id: 'ESP32-K02-FD', name: 'Auto-Feeder #2', status: 'IDLE', dispensedTodayKg: 14.8, targetDailyKg: 32.0, nextSchedule: '14:00' },
-      aerator: { id: 'ESP32-K02-AR', name: 'VFD Aerator #2', status: 'RUNNING', powerPercent: 75, mode: 'AUTO' },
-      dosing: { id: 'ESP32-K02-DS', name: 'Molasses Valve', status: 'STANDBY', flowMlMin: 0 },
-      flush: { id: 'ESP32-K02-FLUSH', name: 'Emergency Siphon Valve', status: 'STANDBY', drainRateM3H: 15, lastFlushed: 'None (Zero-Exchange)' }
-    }
-  },
-  {
-    id: 'K03',
-    name: 'Pond #3 — Nursery A',
-    species: 'Red Tilapia F1 Fingerlings',
-    phase: 'Nursery Stage (Fingerlings)',
-    fishCount: 4500,
-    avgWeightGrams: 85,
-    volumeM3: 30,
-    status: 'OPTIMAL',
-    healthScore: 97,
-    initialBiomassKg: 85,
-    initialFishCount: 4650,
-    initialWeightGrams: 18,
-    targetHarvestWeightGrams: 100, // Nursery grading target
-    stockingDate: '18 Mar 2026',
-    doc: 27,
-    survivalRate: 96.8,
-    adgGramsDay: 2.48,
-    cycleStatus: 'ACTIVE',
-    cumulativeFeedKg: 315.2,
-    cumulativeMolassesKg: 8.2,
-    todayMolassesGrams: 150,
-    cumulativeMortalityCount: 150,
-    mortalityLogs: [
-      { id: 'MORT-301', date: '13 Oct 2026, 07:45 WIB', count: 12, avgWeightGrams: 80, biomassLostKg: 0.96, cause: 'Grading Stress', disposalMethod: 'Buried with quicklime', notes: 'Post-netting recovery' }
-    ],
-    growthHistory: [
-      { doc: 1, abw: 18, biomassKg: 85, feedKg: 0, note: 'Fingerling Stocking' },
-      { doc: 14, abw: 50, biomassKg: 230, feedKg: 140, note: 'Mid-Nursery Check' },
-      { doc: 27, abw: 85, biomassKg: 383, feedKg: 315.2, note: 'Grading Prep' }
-    ],
-    telemetry: {
-      do: 6.8,
-      ph: 7.8,
-      temp: 28.2,
-      ammonia: 0.012,
-      flocDensity: 8,
-      orp: 295,
-      tds: 920,
-      flocSensor: {
-        model: 'Imhoff-Vision AI (ESP32-CAM) & NIR-860nm Probe',
-        protocol: 'RS485 Modbus RTU (Addr: 0x03)',
-        od600: 0.28,
-        tssMgL: 320,
-        settlingRate: '1.4 mm/min',
-        samplingMethod: '15-min Motorized Imhoff Settling Chamber',
-        calibrationStd: 'SNI 7550:2009 / APHA 2540 F'
-      }
-    },
-    actuators: {
-      feeder: { id: 'ESP32-K03-FD', name: 'Auto-Feeder #3', status: 'IDLE', dispensedTodayKg: 6.2, targetDailyKg: 15.0, nextSchedule: '13:30' },
-      aerator: { id: 'ESP32-K03-AR', name: 'VFD Aerator #3', status: 'RUNNING', powerPercent: 70, mode: 'AUTO' },
-      dosing: { id: 'ESP32-K03-DS', name: 'Molasses Valve', status: 'STANDBY', flowMlMin: 0 },
-      flush: { id: 'ESP32-K03-FLUSH', name: 'Emergency Siphon Valve', status: 'STANDBY', drainRateM3H: 15, lastFlushed: 'None (Zero-Exchange)' }
-    }
-  },
-  {
-    id: 'K04',
-    name: 'Pond #4 — Biofloc Core (Demo Hub)',
-    species: 'Super Biofloc Tilapia',
-    phase: 'Commercial Grow-Out (Focus Demo)',
-    fishCount: 1700,
-    avgWeightGrams: 850,
-    volumeM3: 50,
-    status: 'OPTIMAL',
-    healthScore: 96,
-    initialBiomassKg: 380,
-    initialFishCount: 1780,
-    initialWeightGrams: 215,
-    targetHarvestWeightGrams: 900,
-    stockingDate: '15 Dec 2025',
-    doc: 96,
-    survivalRate: 95.5,
-    adgGramsDay: 6.61,
-    cycleStatus: 'ACTIVE',
-    cumulativeFeedKg: 1225.4,
-    cumulativeMolassesKg: 28.5,
-    todayMolassesGrams: 700,
-    cumulativeMortalityCount: 80,
-    mortalityLogs: [
-      { id: 'MORT-401', date: '14 Oct 2026, 08:00 WIB', count: 5, avgWeightGrams: 840, biomassLostKg: 4.20, cause: 'Ammonia Spike Stress', disposalMethod: 'Buried with quicklime', notes: 'Temporary TAN spike before molasses buffer' }
-    ],
-    growthHistory: [
-      { doc: 1, abw: 215, biomassKg: 380, feedKg: 0, note: 'Stocking Grow-Out' },
-      { doc: 30, abw: 430, biomassKg: 750, feedKg: 360, note: 'Sampling 1' },
-      { doc: 60, abw: 640, biomassKg: 1100, feedKg: 760, note: 'Sampling 2' },
-      { doc: 96, abw: 850, biomassKg: 1445, feedKg: 1225.4, note: 'Current Demo State' }
-    ],
-    telemetry: {
-      do: 6.2,
-      ph: 7.5,
-      temp: 28.5,
-      ammonia: 0.02,
-      flocDensity: 12, // mL/L
-      orp: 275,
-      tds: 1150,
-      flocSensor: {
-        model: 'Imhoff-Vision AI (ESP32-CAM) & NIR-860nm Probe',
-        protocol: 'RS485 Modbus RTU (Addr: 0x04)',
-        od600: 0.42,
-        tssMgL: 485,
-        settlingRate: '1.8 mm/min',
-        samplingMethod: '15-min Motorized Imhoff Settling Chamber',
-        calibrationStd: 'SNI 7550:2009 / APHA 2540 F'
-      }
-    },
-    actuators: {
-      feeder: { id: 'ESP32-K04-FD', name: 'Smart Auto-Feeder', status: 'IDLE', dispensedTodayKg: 18.5, targetDailyKg: 43.5, nextSchedule: '14:00 (5.2 kg)' },
-      aerator: { id: 'ESP32-K04-AR', name: 'Dual VFD Aerator (1HP)', status: 'RUNNING', powerPercent: 82, mode: 'AUTO-LOOP' },
-      dosing: { id: 'ESP32-K04-DS', name: 'Molasses Solenoid Valve', status: 'STANDBY', flowMlMin: 0 },
-      flush: { id: 'ESP32-K04-FLUSH', name: 'Emergency Siphon Valve', status: 'STANDBY', drainRateM3H: 15, lastFlushed: 'None (Zero-Exchange Biofloc)' }
+      feeder: { id: 'sim-B-feeder', name: 'Feeder B', status: 'IDLE', dispensedTodayKg: 14.8, targetDailyKg: 32.0, nextSchedule: '14:00' },
+      aerator: { id: 'sim-B-aerator', name: 'Aerator B', status: 'RUNNING', powerPercent: 75, mode: 'SIMULATED' },
+      dosing: { id: 'sim-B-dose', name: 'Molasses valve B', status: 'STANDBY', flowMlMin: 0 },
+      flush: { id: 'sim-B-flush', name: 'Siphon B', status: 'STANDBY', drainRateM3H: 15, lastFlushed: 'Not flushed' }
     }
   }
 ])
@@ -242,70 +129,70 @@ const operationalLogs = ref([
   {
     id: 'ACT-9405',
     time: '11:25:40 WIB',
-    pondId: 'K04',
-    pondName: 'Pond #4 — Biofloc Core',
+    pondId: 'A',
+    pondName: 'Kolam A (bioflok bundar)',
     category: 'FEEDING',
     type: 'AUTO',
-    actor: 'Smart Auto-Feeder Schedule (AI Loop)',
-    action: 'Auto-dispense 5.2 kg BioGrow-7 feed pellets',
+    actor: 'Feeder schedule',
+    action: 'Dispensed 5.2 kg feed pellets',
     dosage: '+5.2 kg',
-    hardware: 'ESP32-K04-FD (Smart Feeder)',
+    hardware: 'sim-A-feeder',
     status: 'EXECUTED',
     notes: 'DO level verified safe (6.2 mg/L) prior to automated feeder dispatch'
   },
   {
     id: 'ACT-9404',
     time: '10:45:12 WIB',
-    pondId: 'K04',
-    pondName: 'Pond #4 — Biofloc Core',
+    pondId: 'A',
+    pondName: 'Kolam A (bioflok bundar)',
     category: 'MOLASSES',
     type: 'MANUAL_ADJUST',
     actor: 'Ilfa Hidayat (Supervisor Adjustment)',
     action: 'Manual injection 350g Cane Molasses carbon solution',
     dosage: '+350 g',
-    hardware: 'ESP32-K04-DS (Solenoid Valve)',
+    hardware: 'sim-A-dose',
     status: 'EXECUTED',
     notes: 'C:N ratio adjusted to 15:1 following ammonia rise to 0.025 ppm'
   },
   {
     id: 'ACT-9403',
     time: '09:15:30 WIB',
-    pondId: 'K02',
-    pondName: 'Pond #2 — Grower B',
+    pondId: 'B',
+    pondName: 'Kolam B (bioflok bundar)',
     category: 'AERATION',
     type: 'AUTO',
-    actor: 'Closed-Loop VFD Automation',
-    action: 'Ramped blower power to 75% RPM based on optical sensor',
-    dosage: '75% RPM',
-    hardware: 'ESP32-K02-AR (Dual VFD)',
+    actor: 'Aerator schedule',
+    action: 'Aerator kept running after the morning check',
+    dosage: 'Running',
+    hardware: 'sim-B-aerator',
     status: 'EXECUTED',
     notes: 'Dynamic frequency modulation for daytime energy optimization'
   },
   {
     id: 'ACT-9402',
     time: '07:30:00 WIB',
-    pondId: 'K01',
-    pondName: 'Pond #1 — Finisher A',
+    pondId: 'A',
+    pondName: 'Kolam A (bioflok bundar)',
     category: 'FEEDING',
     type: 'AUTO',
     actor: 'Morning Schedule Window',
     action: 'Dispensed 11.2 kg finisher pellet ration',
     dosage: '+11.2 kg',
-    hardware: 'ESP32-K01-FD (Auto-Feeder)',
+    hardware: 'sim-A-feeder',
     status: 'EXECUTED',
     notes: 'Fish active, strong feeding response at 28.5°C'
   },
   {
     id: 'ACT-9401',
     time: 'Yesterday 16:20 WIB',
-    pondId: 'K04',
-    pondName: 'Pond #4 — Biofloc Core',
+    pondId: 'B',
+    pondName: 'Kolam B (bioflok bundar)',
     category: 'SIPHON_FLUSH',
     type: 'MANUAL_ADJUST',
     actor: 'Ilfa Hidayat (Supervisor Adjustment)',
     action: 'Emergency bottom sludge siphon & water exchange',
     dosage: '15% Exch (7.5 m³)',
-    hardware: 'ESP32-K04-FLUSH (Siphon Valve)',
+    hardware: 'sim-B-flush',
     status: 'EXECUTED',
     notes: 'Sludge evacuation completed, fresh dechlorinated water replenished'
   }
@@ -562,10 +449,10 @@ export function usePonds() {
       pondName: pond.name,
       category: 'AERATION',
       type: source,
-      actor: source === 'AUTO' ? 'VFD Automatic Frequency Closed-Loop' : 'Ilfa Hidayat (Supervisor Adjustment)',
-      action: `Blower speed adjusted from ${oldPower}% to ${power}% RPM`,
-      dosage: `${power}% RPM`,
-      hardware: `${pond.actuators.aerator.id} (Dual VFD)`,
+      actor: source === 'AUTO' ? 'Aerator schedule' : 'Ilfa Hidayat (Supervisor Adjustment)',
+      action: `Aerator set from level ${oldPower} to ${power}`,
+      dosage: 'Running',
+      hardware: pond.actuators.aerator.id,
       status: 'EXECUTED',
       notes: `Target DO boost achieved: ${pond.telemetry.do} mg/L`
     })
@@ -645,7 +532,7 @@ export function usePonds() {
 
   // Scenario Injections for Live Demo
   const applyScenario = (type) => {
-    const target = ponds.value.find(p => p.id === 'K04')
+    const target = ponds.value.find(p => p.id === 'A')
     if (!target) return
 
     if (type === 'hypoxia') {
@@ -744,7 +631,7 @@ export function usePonds() {
         },
         aerator: {
           id: `ESP32-${pondId}-AR`,
-          name: `VFD Aerator #${pondId}`,
+          name: `Aerator ${pondId}`,
           status: 'RUNNING',
           powerPercent: 80,
           mode: 'AUTO'
