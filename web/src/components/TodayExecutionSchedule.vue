@@ -1,22 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { usePonds } from '../composables/usePonds'
-import { useToast } from '../composables/useToast'
 import { 
   CalendarClock, 
   Utensils, 
   Pipette, 
-  Wind, 
   CheckCircle2, 
-  Clock, 
-  Zap, 
-  Sparkles,
-  ChevronRight,
-  Flame
+  Clock
 } from 'lucide-vue-next'
 
-const { activePond, triggerFeeder, triggerMolassesDosing } = usePonds()
-const { showToast } = useToast()
+const { activePond } = usePonds()
 
 // Reactive tracker for manual overrides within the session
 const sessionOverrides = ref({})
@@ -115,18 +108,6 @@ const scheduleData = computed(() => {
   }
 })
 
-// Trigger upcoming schedule early
-const handleExecuteEarly = (session) => {
-  if (session.category === 'FEEDING') {
-    triggerFeeder(activePond.value.id, session.amountKg, 'MANUAL_ADJUST')
-    showToast(`⚡ Scheduled Feed Executed: Dispensing ${session.doseText} to ${activePond.value.name}.`, 'success')
-  } else if (session.category === 'MOLASSES') {
-    triggerMolassesDosing(activePond.value.id, session.amountGrams, 'MANUAL_ADJUST')
-    showToast(`🧪 Scheduled Molasses Executed: Dispensing ${session.doseText} to ${activePond.value.name}.`, 'info')
-  }
-
-  sessionOverrides.value[session.id] = 'COMPLETED'
-}
 </script>
 
 <template>
