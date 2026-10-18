@@ -17,6 +17,14 @@ const pushAssistant = (messages, text, extra = {}) => {
   })
 }
 
+const readableReply = (text, card) => {
+  const raw = String(text || '').trim()
+  const looksLikeJson = /^[`{[]/.test(raw) || /"refuse"/.test(raw)
+  if (card && (looksLikeJson || !raw)) return card.summary
+  if (raw && !/^[a-z]+(?:_[a-z]+)+$/.test(raw)) return raw
+  return card?.summary || raw
+}
+
 const startDraft = (messages, extra = {}) => {
   const draft = {
     id: 'm-' + Date.now(),
@@ -77,6 +85,13 @@ const typeInto = async (draft, full) => {
 }
 
 export function useCopilot() {
+  if (!sharedCopilot) sharedCopilot = createCopilot()
+  return sharedCopilot
+}
+
+let sharedCopilot
+
+function createCopilot() {
   const { showToast } = useToast()
   const { applyApprovedAction } = usePonds()
 
@@ -219,6 +234,21 @@ export function useCopilot() {
   const authorizeAction = (actionCard) => postToolDecision(actionCard, 'approve')
   const cancelAction = (actionCard) => postToolDecision(actionCard, 'reject')
 
+  const showDecision = async (draft, data, already = '') => {
+    const listed = Array.isArray(data.proposals) && data.proposals.length ? data.proposals : [data.tool_call]
+    const proposals = listed.filter((call) => call && (call.status === 'proposed' || call.status === 'blocked'))
+    const card = proposals[0] ? cardFromCall(proposals[0]) : null
+    const reply = readableReply(already || data.reply, card) || 'The API returned an empty reply.'
+    if (already) draft.text = reply
+    else await typeInto(draft, reply)
+    draft.actionCard = card
+    draft.streaming = false
+    for (const extra of proposals.slice(1)) {
+      const extraCard = cardFromCall(extra)
+      pushAssistant(messages, extraCard.summary, { actionCard: extraCard })
+    }
+  }
+
   const sendMessage = async (rawInput) => {
     if (!rawInput.trim() || isThinking.value) return
 
@@ -277,14 +307,7 @@ export function useCopilot() {
           }
           return
         }
-        const call = data.tool_call
-        const card = call ? cardFromCall(call) : null
-        const reply = data.reply && !/^[a-z]+(?:_[a-z]+)+$/.test(String(data.reply).trim())
-          ? data.reply
-          : card?.summary
-        await typeInto(draft, reply || 'The API returned an empty reply.')
-        draft.actionCard = card
-        draft.streaming = false
+        await showDecision(draft, data)
         return
       }
 
@@ -318,16 +341,7 @@ export function useCopilot() {
         return
       }
 
-      const call = data.tool_call
-      const card = call ? cardFromCall(call) : null
-      if (!draft.text) {
-        const reply = data.reply && !/^[a-z]+(?:_[a-z]+)+$/.test(String(data.reply).trim())
-          ? data.reply
-          : card?.summary
-        draft.text = reply || 'The API returned an empty reply.'
-      }
-      draft.actionCard = card
-      draft.streaming = false
+      await showDecision(draft, data, draft.text || data.reply)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'API is unreachable.'
       showToast(message, 'error')

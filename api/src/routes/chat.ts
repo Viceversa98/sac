@@ -5,7 +5,7 @@ import { appendAudit } from '../audit.js';
 import { citationsFor } from '../citations.js';
 import { dbErrorStatus, getPond, insertToolCall, latestPoint } from '../db/repo.js';
 import { geminiModel, parseIntentText, streamGenerate } from '../gemini.js';
-import { parseIntentLocal, planFromIntent } from '../proposals.js';
+import { isRepairRequest, parseIntentLocal, planFromIntent, planRepair, type PlannedCall } from '../proposals.js';
 import { fallbackProposal, fallbackRefusal, promptC, promptD } from '../prompts.js';
 import { demoRateLimit } from '../rate-limit.js';
 import { chatBodySchema, intentSchema } from '../schemas.js';
@@ -21,6 +21,7 @@ type ChatPayload = {
   intent: unknown;
   reply: string;
   tool_call: Record<string, unknown> | null;
+  proposals?: Array<Record<string, unknown>>;
   model: string | null;
   sop?: unknown;
   audit_sync?: 'ok' | 'pending';
@@ -85,6 +86,80 @@ const modelChunks = async function* (prompt: string, tools: boolean, fallback: s
   if (!sent) yield fallback;
 };
 
+const recordCalls = async (
+  intent: unknown,
+  model: string | null,
+  reply: string,
+  calls: PlannedCall[],
+): Promise<ChatPayload> => {
+  let chunks = await listChunks();
+  if (chunks.length === 0) {
+    await ingestSopFiles();
+    chunks = await listChunks();
+  }
+  const proposals = [];
+  let auditSync: 'ok' | 'pending' = 'ok';
+  for (const call of calls) {
+    const citations = citationsFor(call.tool_name, chunks);
+    const id = await insertToolCall({
+      pond_id: call.pond_id,
+      tool_name: call.tool_name,
+      args: call.args,
+      rationale: reply,
+      citations,
+      safety_result: call.safety,
+      status: call.status,
+      model,
+      prompt_id: call.prompt_id,
+    });
+    const audit = await appendAudit({
+      tool_call_id: id,
+      pond_id: call.pond_id,
+      event: call.status === 'blocked' ? 'blocked' : 'proposed',
+      tool_name: call.tool_name,
+      args: call.args,
+      safety_result: call.safety,
+      citations,
+      actor: { agent: 'sampay', model, prompt_id: call.prompt_id },
+    });
+    if (audit.audit_sync === 'pending') auditSync = 'pending';
+    proposals.push({ id, ...call, citations });
+  }
+  return {
+    simulated: true,
+    intent,
+    reply,
+    tool_call: proposals[0] ?? null,
+    proposals,
+    model,
+    audit_sync: auditSync,
+  };
+};
+
+const formatReading = (value: number | null | undefined): string =>
+  value == null || Number.isNaN(value) ? 'unavailable' : String(value);
+
+const readingSentence = (
+  lang: 'id' | 'en',
+  pondId: string,
+  oxygen: number | null | undefined,
+  ammonia: number | null | undefined,
+  ending: 'status' | 'healthy' | 'repair',
+): string => {
+  const o = formatReading(oxygen);
+  const a = formatReading(ammonia);
+  if (lang === 'id') {
+    const numbers = `Kolam ${pondId}: oksigen ${o} mg/L, amonia ${a} mg/L.`;
+    if (ending === 'healthy') return `${numbers} Dalam rentang. Tidak ada kartu untuk disetujui. Data SIMULATED.`;
+    if (ending === 'repair') return `${numbers} Setujui kartu untuk mencatat perbaikan. Tidak ada perintah perangkat sebelum disetujui. Data SIMULATED.`;
+    return `${numbers} Data SIMULATED.`;
+  }
+  const numbers = `Pond ${pondId}: oxygen ${o} mg/L, ammonia ${a} mg/L.`;
+  if (ending === 'healthy') return `${numbers} In range. Nothing to approve. Data is SIMULATED.`;
+  if (ending === 'repair') return `${numbers} Approve the card to record the fix. No hardware command is sent until you approve. Data is SIMULATED.`;
+  return `${numbers} Data is SIMULATED.`;
+};
+
 const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: number; body: Record<string, unknown> } }> => {
   const { intent, model: intentModel } = await readIntent(body.message, body.lang);
   const lang = body.lang ?? intent.lang;
@@ -92,12 +167,28 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
   const pond = await getPond(pondId);
   if (!pond) return { error: { status: 404, body: { error: 'not_found', message: `Unknown pond ${pondId}` } } };
   const latest = await latestPoint(pondId);
+  const pondContext = {
+    id: pond.id,
+    volume_m3: pond.volume_m3,
+    max_feed_kg: pond.max_feed_kg,
+    latest_do: latest?.do_mgL ?? null,
+    latest_tan: latest?.tan_mgL ?? null,
+  };
+  const repair = (intent.intent !== 'propose_action' || !intent.tool) && isRepairRequest(body.message);
+  if (repair) {
+    const calls = planRepair(pondContext);
+    if (calls.length === 0) {
+      return fixedTurn(intent, intentModel, readingSentence(lang, pondId, pondContext.latest_do, pondContext.latest_tan, 'healthy'));
+    }
+    const reply = readingSentence(lang, pondId, pondContext.latest_do, pondContext.latest_tan, 'repair');
+    return {
+      pace: true,
+      chunks: textChunks(reply),
+      finish: (text) => recordCalls(intent, intentModel, text || reply, calls),
+    };
+  }
   if (intent.intent === 'status_query') {
-    const value = latest?.do_mgL ?? null;
-    const reply = lang === 'id'
-      ? `DO kolam ${pondId} sekarang ${value ?? 'tidak ada'} mg/L. Data SIMULATED.`
-      : `Pond ${pondId} DO is ${value ?? 'unavailable'} mg/L. Data is SIMULATED.`;
-    return fixedTurn(intent, intentModel, reply);
+    return fixedTurn(intent, intentModel, readingSentence(lang, pondId, pondContext.latest_do, pondContext.latest_tan, 'status'));
   }
   if (intent.intent === 'explain_sop' || intent.intent === 'other') {
     let chunks = await listChunks();
@@ -113,13 +204,7 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
         : 'That message did not change a pond. Data is SIMULATED.';
     return fixedTurn(intent, intentModel, reply, { sop: found });
   }
-  const call = planFromIntent(intent, {
-    id: pond.id,
-    volume_m3: pond.volume_m3,
-    max_feed_kg: pond.max_feed_kg,
-    latest_do: latest?.do_mgL ?? null,
-    latest_tan: latest?.tan_mgL ?? null,
-  });
+  const call = planFromIntent(intent, pondContext);
   if (!call) {
     const reply = lang === 'id' ? 'Jumlah perintah belum jelas. Data SIMULATED.' : 'The command amount was not clear. Data is SIMULATED.';
     return fixedTurn(intent, intentModel, reply);

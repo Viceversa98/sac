@@ -23,6 +23,13 @@ export type PondContext = {
 };
 
 const DEFAULT_AERATOR_MINUTES = 120;
+const REPAIR_DO_BELOW_MGL = 4.5;
+
+export const isRepairRequest = (message: string): boolean =>
+  /\bfix\b|\brepair\b|perbaiki|\bbaiki\b|\bhelp\b|tolong|apa masalah|\bcheck\b/i.test(message);
+
+const isStatusQuestion = (message: string): boolean =>
+  /berapa|how(?:'s| is)|what(?:'s| is).*\b(?:do|oxygen|ammonia|tan|status)\b|do sekarang|kondisi|apa kabar/i.test(message);
 
 export const parseIntentLocal = (message: string, langHint?: 'id' | 'en'): Intent => {
   const pondMatch = message.match(/kolam\s*([ab])|pond\s*([ab])/i);
@@ -30,7 +37,7 @@ export const parseIntentLocal = (message: string, langHint?: 'id' | 'en'): Inten
   const lang = langHint ?? (/kolam|molase|berapa|nyalakan|pakan|tambah/i.test(message) ? 'id' : 'en');
   const base = { pond_id, lang, meal: null as Intent['meal'] };
 
-  if (/berapa|what(?:'s| is).*(?:do|oxygen)|do sekarang/i.test(message)) {
+  if (isStatusQuestion(message) && !isRepairRequest(message)) {
     return intentSchema.parse({ ...base, intent: 'status_query', tool: null, amount: null, unit: null });
   }
   if (/molase|molasses/i.test(message)) {
@@ -66,6 +73,9 @@ export const parseIntentLocal = (message: string, langHint?: 'id' | 'en'): Inten
       unit: 'kg',
       meal,
     });
+  }
+  if (isRepairRequest(message)) {
+    return intentSchema.parse({ ...base, intent: 'propose_action', tool: null, amount: null, unit: null });
   }
   return intentSchema.parse({ ...base, intent: 'other', tool: null, amount: null, unit: null });
 };
@@ -125,6 +135,49 @@ export const planFromIntent = (intent: Intent, pond: PondContext): PlannedCall |
     status: safety.ok ? 'proposed' : 'blocked',
     prompt_id: safety.ok ? 'C' : 'D',
   };
+};
+
+export const planRepair = (pond: PondContext): PlannedCall[] => {
+  const calls: PlannedCall[] = [];
+  if (pond.latest_do != null && pond.latest_do < REPAIR_DO_BELOW_MGL) {
+    const safety = checkAerator(DEFAULT_AERATOR_MINUTES);
+    calls.push({
+      pond_id: pond.id,
+      tool_name: 'start_aerator',
+      args: aeratorArgsSchema.parse({
+        pond_id: pond.id,
+        duration_min: DEFAULT_AERATOR_MINUTES,
+        reason: `Oxygen ${pond.latest_do} mg/L is below ${REPAIR_DO_BELOW_MGL} mg/L`,
+      }),
+      safety,
+      status: safety.ok ? 'proposed' : 'blocked',
+      prompt_id: safety.ok ? 'C' : 'D',
+    });
+  }
+  if (pond.latest_tan != null && pond.latest_tan > NH3_OPT_MGL) {
+    const dose = suggestMolasses(pond.latest_tan, pond.volume_m3);
+    const gPerL = dose.capped ? dose.unrounded_g_per_L : dose.g_per_L;
+    const safety = checkMolasses(gPerL, pond.latest_do);
+    calls.push({
+      pond_id: pond.id,
+      tool_name: 'dose_molasses_gL',
+      args: {
+        ...molassesArgsSchema.parse({
+          pond_id: pond.id,
+          g_per_L: gPerL,
+          tan_mgL_basis: pond.latest_tan,
+          reason: dose.capped
+            ? `Refused: ${dose.unrounded_g_per_L.toFixed(3)} g/L is above 0.12 g/L for TAN ${pond.latest_tan} mg/L`
+            : `Node dose for TAN ${pond.latest_tan} mg/L in ${pond.volume_m3} m3`,
+        }),
+        kg_total: dose.kg,
+      },
+      safety,
+      status: safety.ok ? 'proposed' : 'blocked',
+      prompt_id: safety.ok ? 'C' : 'D',
+    });
+  }
+  return calls;
 };
 
 // WHY 120 minutes: SOP-02's demo default, inside the 15–240 minute block.
