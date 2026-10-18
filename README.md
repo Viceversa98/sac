@@ -2,6 +2,9 @@
 
 A supervisor stays in charge. The app watches two simulated tilapia ponds, calculates a molasses dose in code, and asks for approval before anything is recorded. Approving writes a row. It does not turn on a pump, feeder, or aerator.
 
+Theme / problem statement: Future of Work & Enterprise Productivity — one pond supervisor must watch many ponds overnight; Sampay does the monitoring, dose maths and paperwork, and the supervisor approves every recorded action.
+Team: Ilfa Hidayat and Alif Asraf.
+
 ## Live
 
 - Site: https://frontend-sac-811818892931.asia-southeast1.run.app/
@@ -10,7 +13,7 @@ A supervisor stays in charge. The app watches two simulated tilapia ponds, calcu
 - Ponds: https://sac-git-811818892931.asia-southeast1.run.app/api/ponds
 - Approval log: https://sac-git-811818892931.asia-southeast1.run.app/api/audit-events
 
-The demo video is not recorded yet.
+- Demo video (2:50): https://youtu.be/5leqvlQJqAU — Sampay Aquaculture Co-Pilot — AI Builder Cup 2026
 
 ## How we use Google Cloud
 
@@ -37,4 +40,4 @@ The Vite dev server proxies `/api` to `http://localhost:8080`.
 
 ## What is simulated
 
-Kolam A and Kolam B are simulated. Telemetry can be replayed from CSV. A molasses dose uses `(20 × TAN mg/L) / 0.44` grams per cubic metre, and anything above `0.12 g/L` is refused in code. Approve records `executed_simulated`.
+Pond A and Pond B are simulated. Telemetry can be replayed from CSV. A molasses dose uses `(20 × TAN mg/L) / 0.44` grams per cubic metre, and anything above `0.12 g/L` is refused in code. Approve records `executed_simulated`.
