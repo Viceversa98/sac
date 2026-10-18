@@ -22,6 +22,9 @@ ${JSON.stringify(dosesJson)}`;
 export const promptB = (message: string): string => `Classify the supervisor message into one intent and extract slots. Message may be Bahasa Indonesia, English or mixed.
 Intents: status_query | propose_action | explain_sop | other.
 Slots: pond_id ('A','B'), tool ('start_aerator'|'set_feeder_kg'|'dose_molasses_gL'|null), amount (number|null), unit ('g/L'|'kg'|'min'|null), meal ('pagi'|'siang'|'sore'|null), lang ('id'|'en').
+A named device wins: aerator/kincir → start_aerator, molase/molasses → dose_molasses_gL, pakan/feeder → set_feeder_kg.
+If they ask to fix, repair, help, check, or perbaiki a pond without naming a device, return propose_action with tool null. The server chooses the tool from the latest reading.
+If they only ask how the pond is, return status_query and tool null.
 Decimal comma "0,2" means 0.2. Do not calculate a molasses dose. Return JSON only.
 Message: ${message}`;
 

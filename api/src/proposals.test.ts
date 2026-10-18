@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseTelemetryCsv } from './csv.js';
 import { telemetryFile } from './paths.js';
-import { parseIntentLocal, planBriefingActions, planFromIntent, type PondContext } from './proposals.js';
+import { parseIntentLocal, planBriefingActions, planFromIntent, planRepair, type PondContext } from './proposals.js';
 import { stats, withinHours } from './stats.js';
 
 const pond = (id: 'A' | 'B', latestDo: number, latestTan: number): PondContext => ({
@@ -19,6 +19,11 @@ describe('chat decisions', () => {
     expect(parseIntentLocal('nyalakan aerator kolam A 2 jam').amount).toBe(120);
     expect(parseIntentLocal('run aerator pond A for 600 minutes').amount).toBe(600);
     expect(parseIntentLocal('berapa DO kolam A sekarang?').intent).toBe('status_query');
+    expect(parseIntentLocal('how is pond B').intent).toBe('status_query');
+    expect(parseIntentLocal('how is pond B').pond_id).toBe('B');
+    expect(parseIntentLocal('fix Kolam A').intent).toBe('propose_action');
+    expect(parseIntentLocal('fix Kolam A').tool).toBeNull();
+    expect(parseIntentLocal('help me dose molasses in pond A').tool).toBe('dose_molasses_gL');
   });
 
   it('blocks 0.2 g/L, low-DO 0.1 g/L, 600 minutes, and 5 kg', () => {
@@ -48,6 +53,29 @@ describe('chat decisions', () => {
     expect(feeder?.args.kg).toBe(5);
 
     expect(planFromIntent(parseIntentLocal('berapa DO kolam A sekarang?'), pond('A', 3.1, 0.4))).toBeNull();
+  });
+});
+
+describe('repair from the latest reading', () => {
+  it('proposes an aerator for low oxygen and molasses for high ammonia', () => {
+    const lowOxygen = planRepair(pond('A', 3.1, 0.02));
+    expect(lowOxygen.map((call) => call.tool_name)).toEqual(['start_aerator']);
+    expect(lowOxygen[0]?.args.duration_min).toBe(120);
+    expect(lowOxygen[0]?.status).toBe('proposed');
+
+    const highAmmonia = planRepair(pond('A', 5.5, 0.4));
+    expect(highAmmonia.map((call) => call.tool_name)).toEqual(['dose_molasses_gL']);
+    expect(highAmmonia[0]?.status).toBe('proposed');
+
+    const both = planRepair(pond('A', 3.1, 0.4));
+    expect(both.map((call) => call.tool_name)).toEqual(['start_aerator', 'dose_molasses_gL']);
+
+    const blockedDose = planRepair(pond('A', 2.4, 0.4));
+    expect(blockedDose.find((call) => call.tool_name === 'dose_molasses_gL')?.status).toBe('blocked');
+  });
+
+  it('returns no card when the pond is already in range', () => {
+    expect(planRepair(pond('B', 6.2, 0.02))).toEqual([]);
   });
 });
 
