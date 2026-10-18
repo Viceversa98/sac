@@ -29,7 +29,11 @@ const handleScenario = (type, title) => {
   showToast(`Demo scenario: ${title} on ${name}`, 'warning', 4000)
   if (!pond || (type !== 'hypoxia' && type !== 'ammonia_spike')) return
   window.dispatchEvent(new Event('sampay-open-agent'))
-  sendMessage(`fix pond ${pond.id}`)
+  sendMessage(`fix pond ${pond.id}`, {
+    pond_id: pond.id,
+    do_mgL: Number(pond.telemetry.do),
+    tan_mgL: Number(pond.telemetry.ammonia)
+  })
 }
 </script>
 
@@ -76,7 +80,7 @@ const handleScenario = (type, title) => {
         </div>
         <div class="scenario-text">
           <span class="scenario-name">1. Normal & Healthy Water State</span>
-          <span class="scenario-desc">Oxygen 6.2 mg/L, pH 7.5, Ammonia 0.02 ppm. All systems nominal.</span>
+          <span class="scenario-desc">Oxygen 6.25 mg/L, pH 7.5, ammonia (TAN) 0.02 mg/L. All systems nominal.</span>
         </div>
       </button>
 

@@ -1,9 +1,10 @@
-// DO_CRITICAL_MGL is the sourced aerator line, 3 mg/L.
+// DO_SOP_MGL is the sourced aerator line, 3 mg/L.
 // DO_FLOOR_MGL is the sourced critical line, 1.0 mg/L.
 // DO_LOW_MGL is only the Overview watch band. It is not an SOP limit.
-export const DO_CRITICAL_MGL = 3
+// DO_CRITICAL_MGL keeps the old name so existing imports still mean the aerator line.
+export const DO_SOP_MGL = 3
 export const DO_FLOOR_MGL = 1
-export const DO_SOP_MGL = DO_CRITICAL_MGL
+export const DO_CRITICAL_MGL = DO_SOP_MGL
 export const DO_LOW_MGL = 4.5
 export const NH3_OPT_MGL = 0.05
 export const PH_MIN = 7
@@ -31,7 +32,7 @@ const gatewayRadio = (pondId) => {
 
 export const dissolvedOxygenBand = (doMg) => {
   const value = Number(doMg)
-  if (!Number.isFinite(value) || value < DO_CRITICAL_MGL) return 'critical'
+  if (!Number.isFinite(value) || value < DO_SOP_MGL) return 'critical'
   if (value < DO_LOW_MGL) return 'low'
   return 'healthy'
 }
@@ -235,7 +236,7 @@ export const expectedReactions = (pond) => {
   if (dissolvedOxygen < DO_CRITICAL_MGL) {
     items.push({
       tone: 'critical',
-      text: `DO ${formatNumber(dissolvedOxygen, 2)} mg/L is below the 3 mg/L critical limit. Boost the aerator. Hold molasses until oxygen recovers.`
+      text: `DO ${formatNumber(dissolvedOxygen, 2)} mg/L is below the 3 mg/L SOP aerator line. Boost the aerator. Hold molasses until oxygen recovers.`
     })
   } else if (dissolvedOxygen < DO_LOW_MGL) {
     items.push({
@@ -245,14 +246,14 @@ export const expectedReactions = (pond) => {
   } else {
     items.push({
       tone: 'ok',
-      text: `DO ${formatNumber(dissolvedOxygen, 2)} mg/L is above the critical limit. Keep the aerator on its current loop.`
+      text: `DO ${formatNumber(dissolvedOxygen, 2)} mg/L is above the 3 mg/L SOP aerator line. Keep the aerator on its current loop.`
     })
   }
 
   if (ammonia > NH3_OPT_MGL && dissolvedOxygen < DO_CRITICAL_MGL) {
     items.push({
       tone: 'critical',
-      text: `Ammonia ${formatNumber(ammonia, 3)} ppm is high, and molasses stays blocked while DO is below 3 mg/L.`
+      text: `Ammonia (TAN) ${formatNumber(ammonia, 3)} mg/L is high, and molasses stays blocked while DO is below the 3 mg/L SOP aerator line.`
     })
   } else if (ammonia > NH3_OPT_MGL) {
     items.push({

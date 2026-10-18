@@ -45,7 +45,13 @@ const loadAudit = async () => {
     }
     const body = await response.json()
     const events = body.events || []
-    const rows = events.map((event) => ({
+    const decidedIds = new Set(
+      events
+        .filter((event) => event.event === 'executed_simulated' || event.event === 'rejected')
+        .map((event) => String(event.tool_call_id))
+    )
+    const visibleEvents = events.filter((event) => !(event.event === 'proposed' && decidedIds.has(String(event.tool_call_id))))
+    const rows = visibleEvents.map((event) => ({
       id: event.id,
       time: event.recorded_at || '',
       pondId: event.pond_id || '',

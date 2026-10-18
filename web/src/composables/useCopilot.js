@@ -261,12 +261,12 @@ function createCopilot() {
     }
   }
 
-  let pendingMessage = ''
+  let pendingMessage = null
 
-  const sendMessage = async (rawInput) => {
+  const sendMessage = async (rawInput, screenOverride) => {
     if (!rawInput.trim()) return
     if (isThinking.value) {
-      pendingMessage = rawInput.trim()
+      pendingMessage = { text: rawInput.trim(), screen: screenOverride }
       return
     }
 
@@ -287,9 +287,9 @@ function createCopilot() {
 
     try {
       const scenarioPond = ponds.value.find((pond) => pond.scenarioActive)
-      const screen = scenarioPond
+      const screen = screenOverride || (scenarioPond
         ? { pond_id: scenarioPond.id, do_mgL: Number(scenarioPond.telemetry.do), tan_mgL: Number(scenarioPond.telemetry.ammonia) }
-        : undefined
+        : undefined)
       const body = wantsBriefing ? { lang: 'en' } : { message: userText, lang: 'en', ...(screen ? { screen } : {}) }
       const streamPath = wantsBriefing ? '/api/briefings/stream' : '/api/chat/stream'
       const jsonPath = wantsBriefing ? '/api/briefings' : '/api/chat'
@@ -378,8 +378,8 @@ function createCopilot() {
       draft.streaming = false
       if (pendingMessage) {
         const next = pendingMessage
-        pendingMessage = ''
-        sendMessage(next)
+        pendingMessage = null
+        sendMessage(next.text, next.screen)
       }
     }
   }

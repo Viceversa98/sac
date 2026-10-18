@@ -37,7 +37,7 @@ const scenarios = [
     id: 'sim-scenario-normal',
     type: 'reset',
     label: 'Healthy',
-    detail: 'DO 6.2 mg/L, ammonia 0.02 ppm',
+    detail: 'DO 6.25 mg/L, ammonia (TAN) 0.02 mg/L',
     icon: CheckCircle2,
     tone: 'emerald'
   },
@@ -75,7 +75,11 @@ const handleScenario = (type) => {
   const pond = applyScenario(type, activePond.value?.id || 'A')
   if (!pond || (type !== 'hypoxia' && type !== 'ammonia_spike')) return
   window.dispatchEvent(new Event('sampay-open-agent'))
-  sendMessage(`fix pond ${pond.id}`)
+  sendMessage(`fix pond ${pond.id}`, {
+    pond_id: pond.id,
+    do_mgL: Number(pond.telemetry.do),
+    tan_mgL: Number(pond.telemetry.ammonia)
+  })
 }
 
 const handleProjection = (kind) => {
