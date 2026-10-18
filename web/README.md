@@ -16,4 +16,4 @@ npm run dev
 npm run build
 ```
 
-Telemetry and co-pilot screens show a permanent SIMULATED / SIMULASI label. Approve records an audit row (`executed_simulated`) and does not send a hardware command.
+Telemetry and co-pilot screens show a permanent Simulated label. Approve records an audit row (`executed_simulated`) and does not send a hardware command.

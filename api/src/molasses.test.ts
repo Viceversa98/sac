@@ -12,10 +12,10 @@ describe('suggestMolasses', () => {
     expect(dose.g_per_L * dose.volume_m3).not.toBe(dose.kg);
   });
 
-  it('caps the displayed dose at 0.12 g/L', () => {
+  it('keeps a dose above 0.12 g/L so the caller can refuse it', () => {
     const dose = suggestMolasses(3, 30);
     expect(dose.capped).toBe(true);
-    expect(dose.g_per_L).toBe(0.12);
-    expect(dose.kg).toBe(3.6);
+    expect(dose.g_per_L).toBeGreaterThan(0.12);
+    expect(dose.g_per_L).toBe(0.136);
   });
 });

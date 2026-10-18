@@ -155,7 +155,7 @@ const filteredLogs = computed(() => {
           :class="{ active: selectedPondScope === p.id }"
           @click="selectedPondScope = p.id"
         >
-          <span>{{ p.id }}: {{ p.name.split('—')[0].replace('Pond #', 'P#') }}</span>
+          <span>{{ p.name }}</span>
         </button>
       </div>
     </div>

@@ -152,25 +152,27 @@ export const planBriefingActions = (
   const tan = pondStats.tan.last;
   if (nh3 != null && nh3 >= NH3_OPT_MGL && tan != null && tan > 0) {
     const dose = suggestMolasses(tan, pond.volume_m3);
-    const safety = checkMolasses(dose.g_per_L, pondStats.do.last);
-    if (safety.ok) {
-      calls.push({
-        pond_id: pond.id,
-        tool_name: 'dose_molasses_gL',
-        args: {
-          ...molassesArgsSchema.parse({
-            pond_id: pond.id,
-            g_per_L: dose.g_per_L,
-            tan_mgL_basis: tan,
-            reason: `Node dose for TAN ${tan} mg/L in ${pond.volume_m3} m3`,
-          }),
-          kg_total: dose.kg,
-        },
-        safety,
-        status: 'proposed',
-        prompt_id: 'A',
-      });
-    }
+    const safety = dose.capped
+      ? checkMolasses(dose.unrounded_g_per_L, pondStats.do.last)
+      : checkMolasses(dose.g_per_L, pondStats.do.last);
+    calls.push({
+      pond_id: pond.id,
+      tool_name: 'dose_molasses_gL',
+      args: {
+        ...molassesArgsSchema.parse({
+          pond_id: pond.id,
+          g_per_L: dose.capped ? dose.unrounded_g_per_L : dose.g_per_L,
+          tan_mgL_basis: tan,
+          reason: dose.capped
+            ? `Refused: ${(dose.unrounded_g_per_L).toFixed(3)} g/L is above 0.12 g/L for TAN ${tan} mg/L`
+            : `Node dose for TAN ${tan} mg/L in ${pond.volume_m3} m3`,
+        }),
+        kg_total: dose.kg,
+      },
+      safety,
+      status: safety.ok ? 'proposed' : 'blocked',
+      prompt_id: safety.ok ? 'A' : 'D',
+    });
   }
   return calls;
 };

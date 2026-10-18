@@ -95,6 +95,36 @@ const generate = async (options: {
   }
 };
 
+export const geminiModel = (): string => modelName();
+
+export const streamGenerate = async function* (options: {
+  model: string;
+  prompt: string;
+  temperature: number;
+  tools?: boolean;
+}): AsyncGenerator<string> {
+  const open = () =>
+    getAi().models.generateContentStream({
+      model: options.model,
+      contents: options.prompt,
+      config: {
+        temperature: options.temperature,
+        ...(options.tools ? { tools: [{ functionDeclarations: toolDeclarations }] } : {}),
+      },
+    });
+  let stream: Awaited<ReturnType<typeof open>>;
+  try {
+    stream = await open();
+  } catch (err) {
+    if (!isRetriable(err)) throw err;
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    stream = await open();
+  }
+  for await (const chunk of stream) {
+    if (chunk.text) yield chunk.text;
+  }
+};
+
 export const diagPing = async (): Promise<{ model: string; text: string }> => {
   const response = await generate({ model: modelName(), prompt: 'reply OK', temperature: 0 });
   return { model: modelName(), text: response.text ?? '' };

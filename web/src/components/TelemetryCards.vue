@@ -256,7 +256,7 @@ const estimatedBiomass = computed(() => {
                 <Camera :size="12" class="text-sky" />
                 <span class="sensor-hw-name">Simulated floc reading</span>
               </div>
-              <span class="sensor-proto-tag">SIMULATED</span>
+              <span class="sensor-proto-tag">Simulated</span>
             </div>
             <div class="sensor-specs-grid">
               <div class="spec-item">
