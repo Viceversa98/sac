@@ -1,4 +1,4 @@
-CREATE TABLE `approvals` (
+CREATE TABLE IF NOT EXISTS `approvals` (
 	`id` bigint AUTO_INCREMENT NOT NULL,
 	`tool_call_id` bigint NOT NULL,
 	`user_id` int NOT NULL,
@@ -8,8 +8,7 @@ CREATE TABLE `approvals` (
 	CONSTRAINT `approvals_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uk_one_decision` UNIQUE(`tool_call_id`)
 );
---> statement-breakpoint
-CREATE TABLE `ponds` (
+CREATE TABLE IF NOT EXISTS `ponds` (
 	`id` varchar(16) NOT NULL,
 	`name` varchar(100) NOT NULL,
 	`volume_m3` decimal(8,2) NOT NULL,
@@ -18,8 +17,7 @@ CREATE TABLE `ponds` (
 	`is_simulated` boolean NOT NULL DEFAULT true,
 	CONSTRAINT `ponds_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
-CREATE TABLE `sop_documents` (
+CREATE TABLE IF NOT EXISTS `sop_documents` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`doc_key` varchar(64) NOT NULL,
 	`chunk_no` int NOT NULL,
@@ -30,8 +28,7 @@ CREATE TABLE `sop_documents` (
 	CONSTRAINT `sop_documents_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uk_doc_chunk` UNIQUE(`doc_key`,`chunk_no`)
 );
---> statement-breakpoint
-CREATE TABLE `telemetry_readings` (
+CREATE TABLE IF NOT EXISTS `telemetry_readings` (
 	`id` bigint AUTO_INCREMENT NOT NULL,
 	`pond_id` varchar(16) NOT NULL,
 	`ts` datetime NOT NULL,
@@ -45,8 +42,7 @@ CREATE TABLE `telemetry_readings` (
 	CONSTRAINT `telemetry_readings_id` PRIMARY KEY(`id`),
 	CONSTRAINT `uk_pond_ts` UNIQUE(`pond_id`,`ts`)
 );
---> statement-breakpoint
-CREATE TABLE `tool_calls` (
+CREATE TABLE IF NOT EXISTS `tool_calls` (
 	`id` bigint AUTO_INCREMENT NOT NULL,
 	`pond_id` varchar(16) NOT NULL,
 	`tool_name` enum('start_aerator','set_feeder_kg','dose_molasses_gL') NOT NULL,
@@ -60,8 +56,7 @@ CREATE TABLE `tool_calls` (
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `tool_calls_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(100) NOT NULL,
 	`role` enum('supervisor','operator') NOT NULL,
@@ -69,9 +64,43 @@ CREATE TABLE `users` (
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `users_id` PRIMARY KEY(`id`)
 );
---> statement-breakpoint
-ALTER TABLE `approvals` ADD CONSTRAINT `approvals_tool_call_id_tool_calls_id_fk` FOREIGN KEY (`tool_call_id`) REFERENCES `tool_calls`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `approvals` ADD CONSTRAINT `approvals_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `telemetry_readings` ADD CONSTRAINT `telemetry_readings_pond_id_ponds_id_fk` FOREIGN KEY (`pond_id`) REFERENCES `ponds`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `tool_calls` ADD CONSTRAINT `tool_calls_pond_id_ponds_id_fk` FOREIGN KEY (`pond_id`) REFERENCES `ponds`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX `idx_pond_ts` ON `telemetry_readings` (`pond_id`,`ts`);
+SET @sql = (SELECT IF(
+	(SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'approvals' AND CONSTRAINT_NAME = 'approvals_tool_call_id_tool_calls_id_fk') = 0,
+	'ALTER TABLE `approvals` ADD CONSTRAINT `approvals_tool_call_id_tool_calls_id_fk` FOREIGN KEY (`tool_call_id`) REFERENCES `tool_calls`(`id`) ON DELETE no action ON UPDATE no action',
+	'SELECT 1'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sql = (SELECT IF(
+	(SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'approvals' AND CONSTRAINT_NAME = 'approvals_user_id_users_id_fk') = 0,
+	'ALTER TABLE `approvals` ADD CONSTRAINT `approvals_user_id_users_id_fk` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action',
+	'SELECT 1'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sql = (SELECT IF(
+	(SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'telemetry_readings' AND CONSTRAINT_NAME = 'telemetry_readings_pond_id_ponds_id_fk') = 0,
+	'ALTER TABLE `telemetry_readings` ADD CONSTRAINT `telemetry_readings_pond_id_ponds_id_fk` FOREIGN KEY (`pond_id`) REFERENCES `ponds`(`id`) ON DELETE no action ON UPDATE no action',
+	'SELECT 1'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sql = (SELECT IF(
+	(SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'tool_calls' AND CONSTRAINT_NAME = 'tool_calls_pond_id_ponds_id_fk') = 0,
+	'ALTER TABLE `tool_calls` ADD CONSTRAINT `tool_calls_pond_id_ponds_id_fk` FOREIGN KEY (`pond_id`) REFERENCES `ponds`(`id`) ON DELETE no action ON UPDATE no action',
+	'SELECT 1'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sql = (SELECT IF(
+	(SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'telemetry_readings' AND INDEX_NAME = 'idx_pond_ts') = 0,
+	'CREATE INDEX `idx_pond_ts` ON `telemetry_readings` (`pond_id`,`ts`)',
+	'SELECT 1'
+));
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
