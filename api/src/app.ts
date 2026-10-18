@@ -36,6 +36,7 @@ app.use('/api/*', cors({
 }));
 
 app.get('/healthz', (c) => c.text('ok'));
+app.get('/api/health', (c) => c.text('ok'));
 
 app.route('/', telemetryRoutes);
 app.route('/', pondRoutes);

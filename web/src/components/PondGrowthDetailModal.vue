@@ -378,7 +378,7 @@ const svgPathString = computed(() => {
           <div class="mortality-kpi-row font-mono">
             <div class="m-kpi">
               <span class="m-kpi-lbl">Cumulative Deaths</span>
-              <span class="m-kpi-val text-rose">{{ cumulativeMortality.toLocaleString() }} ekor</span>
+              <span class="m-kpi-val text-rose">{{ cumulativeMortality.toLocaleString() }} fish</span>
             </div>
             <div class="m-kpi">
               <span class="m-kpi-lbl">Survival Rate (SR)</span>
@@ -411,7 +411,7 @@ const svgPathString = computed(() => {
               <tbody>
                 <tr v-for="log in mortalityList" :key="log.id">
                   <td class="text-muted">{{ log.date }}</td>
-                  <td class="text-rose font-bold">-{{ log.count }} ekor</td>
+                  <td class="text-rose font-bold">-{{ log.count }} fish</td>
                   <td>{{ log.avgWeightGrams }} g</td>
                   <td class="text-rose font-bold">-{{ log.biomassLostKg }} kg</td>
                   <td>

@@ -12,6 +12,12 @@ describe('http', () => {
     expect(await response.text()).toBe('ok');
   });
 
+  it('answers /api/health without MySQL or GCP', async () => {
+    const response = await app.request('/api/health');
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('ok');
+  });
+
   it('rejects a telemetry body before it touches MySQL', async () => {
     const response = await app.request('/api/telemetry', {
       method: 'POST',
