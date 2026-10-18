@@ -240,7 +240,7 @@ export const expectedReactions = (pond) => {
   } else if (dissolvedOxygen < DO_LOW_MGL) {
     items.push({
       tone: 'alert',
-      text: `DO ${formatNumber(dissolvedOxygen, 2)} mg/L is low. Boost the aerator to bring oxygen back above the safe band.`
+      text: `DO ${formatNumber(dissolvedOxygen, 2)} mg/L is in the watch band. The aerator line is 3 mg/L.`
     })
   } else {
     items.push({

@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { usePonds } from '../composables/usePonds'
+import { useCopilot } from '../composables/useCopilot'
 import { useToast } from '../composables/useToast'
 import { 
   SlidersHorizontal, 
@@ -14,6 +15,7 @@ import {
 
 const emit = defineEmits(['close'])
 const { applyScenario, isLiveSimulationRunning, ponds } = usePonds()
+const { sendMessage } = useCopilot()
 const { showToast } = useToast()
 const scenarioPondId = ref('A')
 
@@ -25,6 +27,9 @@ const handleScenario = (type, title) => {
   const pond = applyScenario(type, scenarioPondId.value)
   const name = pond?.name || `Pond ${scenarioPondId.value}`
   showToast(`Demo scenario: ${title} on ${name}`, 'warning', 4000)
+  if (!pond || (type !== 'hypoxia' && type !== 'ammonia_spike')) return
+  window.dispatchEvent(new Event('sampay-open-agent'))
+  sendMessage(`fix pond ${pond.id}`)
 }
 </script>
 
@@ -85,7 +90,7 @@ const handleScenario = (type, title) => {
           <AlertTriangle :size="18" />
         </div>
         <div class="scenario-text">
-          <span class="scenario-name">2. Hypoxia Emergency (DO 3.2 mg/L)</span>
+          <span class="scenario-name">2. Hypoxia Emergency (DO 2.9 mg/L)</span>
           <span class="scenario-desc">Triggers critical low DO alarm & auto-prompts 100% aerator boost</span>
         </div>
       </button>

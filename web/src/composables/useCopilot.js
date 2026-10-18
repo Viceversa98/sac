@@ -93,7 +93,7 @@ let sharedCopilot
 
 function createCopilot() {
   const { showToast } = useToast()
-  const { applyApprovedAction, refreshFromApi } = usePonds()
+  const { applyApprovedAction, refreshFromApi, ponds } = usePonds()
 
   const isThinking = ref(false)
   const autoPilotMode = ref(false)
@@ -261,8 +261,14 @@ function createCopilot() {
     }
   }
 
+  let pendingMessage = ''
+
   const sendMessage = async (rawInput) => {
-    if (!rawInput.trim() || isThinking.value) return
+    if (!rawInput.trim()) return
+    if (isThinking.value) {
+      pendingMessage = rawInput.trim()
+      return
+    }
 
     const userText = rawInput.trim()
 
@@ -280,7 +286,11 @@ function createCopilot() {
     const draft = startDraft(messages)
 
     try {
-      const body = wantsBriefing ? { lang: 'en' } : { message: userText, lang: 'en' }
+      const scenarioPond = ponds.value.find((pond) => pond.scenarioActive)
+      const screen = scenarioPond
+        ? { pond_id: scenarioPond.id, do_mgL: Number(scenarioPond.telemetry.do), tan_mgL: Number(scenarioPond.telemetry.ammonia) }
+        : undefined
+      const body = wantsBriefing ? { lang: 'en' } : { message: userText, lang: 'en', ...(screen ? { screen } : {}) }
       const streamPath = wantsBriefing ? '/api/briefings/stream' : '/api/chat/stream'
       const jsonPath = wantsBriefing ? '/api/briefings' : '/api/chat'
       let response = await fetch(apiUrl(streamPath), {
@@ -366,6 +376,11 @@ function createCopilot() {
     } finally {
       isThinking.value = false
       draft.streaming = false
+      if (pendingMessage) {
+        const next = pendingMessage
+        pendingMessage = ''
+        sendMessage(next)
+      }
     }
   }
 

@@ -14,7 +14,11 @@ import { textChunks } from '../text-chunks.js';
 
 export const chatRoutes = new Hono();
 
-type ChatBody = { message: string; lang?: 'id' | 'en' };
+type ChatBody = {
+  message: string;
+  lang?: 'id' | 'en';
+  screen?: { pond_id: 'A' | 'B'; do_mgL: number; tan_mgL: number };
+};
 
 type ChatPayload = {
   simulated: true;
@@ -145,7 +149,10 @@ const readingSentence = (
   ammonia: number | null | undefined,
   ending: 'status' | 'healthy' | 'repair',
 ): string => {
-  const numbers = `Pond ${pondId}: oxygen ${formatReading(oxygen)} mg/L, ammonia ${formatReading(ammonia)} mg/L.`;
+  const numbers = `Pond ${pondId}: oxygen ${formatReading(oxygen)} mg/L, ammonia (TAN) ${formatReading(ammonia)} mg/L.`;
+  if (ending === 'healthy' && oxygen != null && oxygen > 3 && oxygen < 4.5) {
+    return `${numbers} Oxygen is in the Overview watch band. The aerator card starts at 3 mg/L. Nothing to approve. Data is simulated.`;
+  }
   if (ending === 'healthy') return `${numbers} In range. Nothing to approve. Data is simulated.`;
   if (ending === 'repair') return `${numbers} Approve the card to record the fix. No hardware command is sent until you approve. Data is simulated.`;
   return `${numbers} Data is simulated.`;
@@ -157,12 +164,13 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
   const pond = await getPond(pondId);
   if (!pond) return { error: { status: 404, body: { error: 'not_found', message: `Unknown pond ${pondId}` } } };
   const latest = await latestPoint(pondId);
+  const screen = body.screen?.pond_id === pondId ? body.screen : null;
   const pondContext = {
     id: pond.id,
     volume_m3: pond.volume_m3,
     max_feed_kg: pond.max_feed_kg,
-    latest_do: latest?.do_mgL ?? null,
-    latest_tan: latest?.tan_mgL ?? null,
+    latest_do: screen?.do_mgL ?? latest?.do_mgL ?? null,
+    latest_tan: screen?.tan_mgL ?? latest?.tan_mgL ?? null,
   };
   const repair = (intent.intent !== 'propose_action' || !intent.tool) && isRepairRequest(body.message);
   if (repair) {
