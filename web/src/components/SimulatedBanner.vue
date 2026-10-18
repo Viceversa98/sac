@@ -4,7 +4,7 @@
 
 <template>
   <p class="simulated-banner" role="status">
-    <strong>SIMULATED / SIMULASI</strong>
+    <strong>Simulated</strong>
     <span>Sensor feed and proposed actions on this screen are simulated.</span>
   </p>
 </template>

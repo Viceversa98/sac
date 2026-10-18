@@ -1,5 +1,5 @@
 <script setup>
-import { ref, nextTick, watch } from 'vue'
+import { ref, nextTick, watch, computed } from 'vue'
 import { useCopilot } from '../composables/useCopilot'
 import { usePonds } from '../composables/usePonds'
 import { 
@@ -15,6 +15,7 @@ import {
 } from 'lucide-vue-next'
 
 const { messages, isThinking, autoPilotMode, sendMessage, authorizeAction, cancelAction } = useCopilot()
+const showThinking = computed(() => isThinking.value && !messages.value.some((msg) => msg.streaming))
 const { activePond } = usePonds()
 
 const inputMessage = ref('')
@@ -167,9 +168,11 @@ const formatMarkdown = (text) => {
           <!-- Message Text Body with formatted HTML -->
           <div
             class="msg-body"
-            :class="{ 'briefing-card': msg.isBriefing }"
-            v-html="formatMarkdown(displayText(msg))"
-          ></div>
+            :class="{ 'briefing-card': msg.isBriefing, 'is-streaming': msg.streaming }"
+            :aria-busy="msg.streaming ? 'true' : 'false'"
+          >
+            <span v-html="formatMarkdown(displayText(msg))"></span><span v-if="msg.streaming" class="stream-caret" aria-hidden="true"></span>
+          </div>
           <div v-if="groupedFacts(msg).length" class="fact-sheet" aria-label="Pond readings">
             <section v-for="group in groupedFacts(msg)" :key="msg.id + '-' + group.pondId" class="fact-pond">
               <h3 class="fact-pond-title">Pond {{ group.pondId }}</h3>
@@ -211,7 +214,7 @@ const formatMarkdown = (text) => {
             <div class="hitl-card-header">
               <div class="hitl-header-left">
                 <ShieldAlert class="hitl-icon" :size="18" />
-                <span class="hitl-title">Supervisor Authorization Required</span>
+                <span class="hitl-title">{{ msg.actionCard.title || 'Needs your decision' }}</span>
               </div>
               <span 
                 class="badge"
@@ -221,14 +224,14 @@ const formatMarkdown = (text) => {
                   'badge-rose': msg.actionCard.status === 'cancelled'
                 }"
               >
-                {{ msg.actionCard.status === 'pending' ? 'PENDING APPROVAL' : (msg.actionCard.status === 'approved' ? 'APPROVED' : 'CANCELLED') }}
+                {{ msg.actionCard.status === 'pending' ? 'Waiting' : (msg.actionCard.status === 'approved' ? 'Recorded' : 'Rejected') }}
               </span>
             </div>
 
             <p class="hitl-desc">{{ msg.actionCard.description }}</p>
 
             <div class="hitl-meta font-mono">
-              <span>Proposal: <strong>{{ msg.actionCard.targetDevice }}</strong></span>
+              <span>{{ msg.actionCard.targetDevice }}</span>
             </div>
 
             <div v-if="msg.actionCard.status === 'pending'" class="hitl-buttons-row">
@@ -270,7 +273,7 @@ const formatMarkdown = (text) => {
       </div>
 
       <!-- Thinking Indicator -->
-      <div v-if="isThinking" class="message-bubble-wrapper assistant">
+      <div v-if="showThinking" class="message-bubble-wrapper assistant">
         <div class="msg-avatar assistant">
           <Bot :size="16" />
         </div>
@@ -723,6 +726,20 @@ const formatMarkdown = (text) => {
 
 .thinking-sparkle {
   display: inline-flex;
+}
+
+.stream-caret {
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  margin-left: 2px;
+  background: currentColor;
+  vertical-align: text-bottom;
+  animation: stream-blink 1s steps(1) infinite;
+}
+
+@keyframes stream-blink {
+  50% { opacity: 0; }
 }
 
 @keyframes pulse {

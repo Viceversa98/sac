@@ -88,7 +88,7 @@ const recommendedAction = computed(() => {
 // Action handlers with customized dosages
 const handleManualFeed = () => {
   triggerFeeder(activePond.value.id, customFeedKg.value)
-  showToast(`⚡ Feeder Executed: Dispensing ${customFeedKg.value} kg feed pellets to ${activePond.value.name}.`, 'success')
+  showToast(`Feeder recorded: ${customFeedKg.value} kg for ${activePond.value.name}. No feeder was switched on.`, 'success')
 }
 
 const handleAeratorSet = (targetPower) => {
@@ -354,7 +354,7 @@ const handleEmergencyFlush = () => {
             class="badge"
             :class="activePond.telemetry.do < 4.8 ? 'badge-rose' : 'badge-emerald'"
           >
-            {{ activePond.telemetry.do < 4.8 ? 'LOW DO ALERT' : 'SIMULATED' }}
+            {{ activePond.telemetry.do < 4.8 ? 'LOW DO ALERT' : 'Simulated' }}
           </span>
         </div>
 
@@ -508,7 +508,7 @@ const handleEmergencyFlush = () => {
             @click="handleEmergencyFlush"
           >
             <AlertTriangle :size="14" />
-            <span>{{ activePond.actuators.flush?.status === 'FLUSHING' ? 'Flushing Bottom Sludge...' : (isFlushArmed ? `🚨 Execute ${flushPercent}% Emergency Flush` : 'Arm Valve to Execute Flush') }}</span>
+            <span>{{ activePond.actuators.flush?.status === 'FLUSHING' ? 'Flushing the bottom sludge...' : (isFlushArmed ? `Record a ${flushPercent}% flush` : 'Arm the valve') }}</span>
           </button>
         </div>
       </div>

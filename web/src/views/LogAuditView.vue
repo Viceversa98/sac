@@ -137,7 +137,7 @@ const exportLogsCsv = () => {
           :class="{ active: selectedPondFilter === p.id }"
           @click="selectedPondFilter = p.id"
         >
-          <span>{{ p.id }}: {{ p.name.split('—')[0].replace('Pond #', 'P#') }}</span>
+          <span>{{ p.name }}</span>
         </button>
       </div>
     </div>

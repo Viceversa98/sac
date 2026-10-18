@@ -129,7 +129,7 @@ const handleExecuteTransfer = () => {
 
   if (success) {
     showToast(
-      `🔄 Fish Transfer Executed: ${transferCount.value.toLocaleString()} fish (${transferKg.value} kg) moved to ${selectedTargetPond.value?.name}!`,
+      `Recorded: ${transferCount.value.toLocaleString()} fish (${transferKg.value} kg) moved to ${selectedTargetPond.value?.name}.`,
       'success'
     )
     emit('action-completed', { type: 'TRANSFER', sourceId: props.pond.id, targetId: targetPondId.value })
@@ -292,7 +292,7 @@ const handleExecuteTransfer = () => {
             @click="handleExecuteHarvest"
           >
             <Award :size="15" />
-            <span>Confirm & Execute {{ harvestType === 'FULL' ? 'Full Harvest' : 'Partial Harvest' }}</span>
+            <span>Record {{ harvestType === 'FULL' ? 'full harvest' : 'partial harvest' }}</span>
           </button>
         </div>
       </div>
@@ -407,7 +407,7 @@ const handleExecuteTransfer = () => {
             @click="handleExecuteTransfer"
           >
             <ArrowRightLeft :size="15" />
-            <span>Execute Transfer ({{ transferCount.toLocaleString() }} Fish)</span>
+            <span>Record move ({{ transferCount.toLocaleString() }} fish)</span>
           </button>
         </div>
       </div>

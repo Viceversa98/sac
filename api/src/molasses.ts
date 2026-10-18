@@ -3,13 +3,14 @@ import { CARB_G_PER_G_TAN, MOLASSES_CARB_FRACTION, MOLASSES_MAX_GL } from './thr
 export type MolassesDose = {
   tan_mgL: number;
   volume_m3: number;
-  /** Display g/L, 3 decimal places, after the 0.12 cap. */
+  /** Display g/L, 3 decimal places. Not reduced to the 0.12 g/L limit. */
   g_per_L: number;
   /** Display kg, 2 decimal places, rounded from the unrounded gram total. */
   kg: number;
   unrounded_g_per_L: number;
   unrounded_kg: number;
   unrounded_grams: number;
+  /** True when the calculated dose is above 0.12 g/L. The caller must refuse it. */
   capped: boolean;
 };
 
@@ -24,11 +25,9 @@ export const suggestMolasses = (tanMgL: number, volumeM3: number): MolassesDose 
     throw new Error('suggestMolasses needs tanMgL >= 0 and volumeM3 > 0');
   }
   const unroundedGrams = (CARB_G_PER_G_TAN / MOLASSES_CARB_FRACTION) * tanMgL * volumeM3;
-  const rawGPerL = unroundedGrams / volumeM3 / 1000;
-  const capped = rawGPerL > MOLASSES_MAX_GL;
-  const unroundedGPerL = capped ? MOLASSES_MAX_GL : rawGPerL;
-  const grams = unroundedGPerL * volumeM3 * 1000;
-  const unroundedKg = grams / 1000;
+  const unroundedGPerL = unroundedGrams / volumeM3 / 1000;
+  const capped = unroundedGPerL > MOLASSES_MAX_GL;
+  const unroundedKg = unroundedGrams / 1000;
   return {
     tan_mgL: tanMgL,
     volume_m3: volumeM3,
@@ -36,7 +35,7 @@ export const suggestMolasses = (tanMgL: number, volumeM3: number): MolassesDose 
     kg: roundDisplay(unroundedKg, 2),
     unrounded_g_per_L: unroundedGPerL,
     unrounded_kg: unroundedKg,
-    unrounded_grams: grams,
+    unrounded_grams: unroundedGrams,
     capped,
   };
 };

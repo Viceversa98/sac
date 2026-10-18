@@ -137,7 +137,7 @@ const operationalLogs = ref([
     action: 'Dispensed 5.2 kg feed pellets',
     dosage: '+5.2 kg',
     hardware: 'sim-A-feeder',
-    status: 'EXECUTED',
+    status: 'Recorded',
     notes: 'DO level verified safe (6.2 mg/L) prior to automated feeder dispatch'
   },
   {
@@ -151,7 +151,7 @@ const operationalLogs = ref([
     action: 'Manual injection 350g Cane Molasses carbon solution',
     dosage: '+350 g',
     hardware: 'sim-A-dose',
-    status: 'EXECUTED',
+    status: 'Recorded',
     notes: 'C:N ratio adjusted to 15:1 following ammonia rise to 0.025 ppm'
   },
   {
@@ -165,7 +165,7 @@ const operationalLogs = ref([
     action: 'Aerator kept running after the morning check',
     dosage: 'Running',
     hardware: 'sim-B-aerator',
-    status: 'EXECUTED',
+    status: 'Recorded',
     notes: 'Dynamic frequency modulation for daytime energy optimization'
   },
   {
@@ -179,7 +179,7 @@ const operationalLogs = ref([
     action: 'Dispensed 11.2 kg finisher pellet ration',
     dosage: '+11.2 kg',
     hardware: 'sim-A-feeder',
-    status: 'EXECUTED',
+    status: 'Recorded',
     notes: 'Fish active, strong feeding response at 28.5°C'
   },
   {
@@ -193,7 +193,7 @@ const operationalLogs = ref([
     action: 'Emergency bottom sludge siphon & water exchange',
     dosage: '15% Exch (7.5 m³)',
     hardware: 'sim-B-flush',
-    status: 'EXECUTED',
+    status: 'Recorded',
     notes: 'Sludge evacuation completed, fresh dechlorinated water replenished'
   }
 ])
@@ -424,7 +424,7 @@ export function usePonds() {
       action: `Dispensed ${addedKg} kg BioGrow-7 Pellets`,
       dosage: `+${addedKg} kg`,
       hardware: `${pond.actuators.feeder.id} (Auto-Feeder)`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Cumulative feed: ${pond.cumulativeFeedKg} kg | Live FCR: ${activePondBiomassMetrics.value.estimatedFcr}`
     })
 
@@ -453,7 +453,7 @@ export function usePonds() {
       action: `Aerator set from level ${oldPower} to ${power}`,
       dosage: 'Running',
       hardware: pond.actuators.aerator.id,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Target DO boost achieved: ${pond.telemetry.do} mg/L`
     })
 
@@ -479,7 +479,7 @@ export function usePonds() {
       action: `Injected ${doseGrams}g Organic Cane Molasses (C:N 15:1)`,
       dosage: `+${doseGrams} g`,
       hardware: `${pond.actuators.dosing.id} (Solenoid Valve)`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Cumulative cycle carbon: ${pond.cumulativeMolassesKg} kg | Ammonia: ${pond.telemetry.ammonia} ppm`
     })
 
@@ -509,7 +509,7 @@ export function usePonds() {
       action: `Bottom sludge siphon & ${percent}% water volume exchange`,
       dosage: `${percent}% Exch (${Math.round(pond.volumeM3 * percent / 100)} m³)`,
       hardware: `${pond.actuators.flush.id} (Siphon Valve)`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Toxic TAN flushed | Fresh oxygen-rich water recharged`
     })
 
@@ -573,7 +573,7 @@ export function usePonds() {
     const volumeM3 = Number(newPondData.volumeM3) || 50
     const initialBiomassKg = Number(newPondData.initialBiomassKg) || Number(((fishCount * avgWeightGrams) / 1000).toFixed(1))
     const targetHarvestWeightGrams = Number(newPondData.targetHarvestWeightGrams) || 850
-    const pondName = newPondData.name?.trim() || `Pond #${nextIdx} — ${newPondData.phase || 'Nursery B'}`
+    const pondName = newPondData.name?.trim() || `Kolam ${nextIdx}`
 
     const newPond = {
       id: pondId,
@@ -664,7 +664,7 @@ export function usePonds() {
       action: `Registered New Production Pond ${pondId} (${newPond.name})`,
       dosage: `${volumeM3} m³ | ${fishCount.toLocaleString()} fish (${initialBiomassKg} kg)`,
       hardware: `ESP32-${pondId} Telemetry & Actuator Cluster`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Initial stocking: ${avgWeightGrams}g/fish | Target Harvest: ${targetHarvestWeightGrams}g`
     })
 
@@ -703,10 +703,10 @@ export function usePonds() {
         category: 'CYCLE_HARVEST',
         type: 'MANUAL_ADJUST',
         actor: 'Ilfa Hidayat (Harvest Operator)',
-        action: `FULL HARVEST EXECUTED: ${harvestedKg.toLocaleString()} kg Tilapia`,
+        action: `Full harvest recorded: ${harvestedKg.toLocaleString()} kg tilapia`,
         dosage: `${countHarvested.toLocaleString()} fish @ ${finalAbw}g/fish`,
         hardware: `Siphon Channel & Harvest Net`,
-        status: 'EXECUTED',
+        status: 'Recorded',
         notes: `Final FCR: ${finalFcr} | Total Feed: ${pond.cumulativeFeedKg} kg | Cycle Completed: ${notes || 'Market Harvest'}`
       })
     } else {
@@ -721,7 +721,7 @@ export function usePonds() {
         action: `PARTIAL HARVEST (Thinning): ${harvestedKg.toLocaleString()} kg Tilapia`,
         dosage: `${countHarvested.toLocaleString()} fish removed`,
         hardware: `Selective Grading Net`,
-        status: 'EXECUTED',
+        status: 'Recorded',
         notes: `Remaining in pond: ${pond.fishCount.toLocaleString()} fish (~${Math.round(pond.fishCount * pond.avgWeightGrams / 1000)} kg)`
       })
     }
@@ -756,7 +756,7 @@ export function usePonds() {
       action: `Fish Grading Transfer: ${source.id} ➔ ${target.id}`,
       dosage: `${count.toLocaleString()} fish (${kg} kg @ ${abw}g)`,
       hardware: `Grading Tank & Water Transfer Pipeline`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Reason: ${reason || 'Progressive size grading'}. ${target.name} population now: ${target.fishCount.toLocaleString()} fish.`
     })
 
@@ -798,7 +798,7 @@ export function usePonds() {
       action: `Restarted Culture Cycle in ${pond.id} (${pond.name})`,
       dosage: `${count.toLocaleString()} fingerlings (${biomass} kg)`,
       hardware: `Cleaned Biofloc Tank`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `New cycle initialized with fresh dechlorinated water and biofloc inoculum`
     })
 
@@ -847,7 +847,7 @@ export function usePonds() {
       action: `Recorded Fish Mortality: -${deadCount} fish in ${pond.name}`,
       dosage: `-${deadCount} fish (-${lostKg} kg)`,
       hardware: `Scoop Net & Disposal Pit`,
-      status: 'EXECUTED',
+      status: 'Recorded',
       notes: `Cause: ${cause} | Sisa Populasi: ${pond.fishCount.toLocaleString()} fish | New SR: ${pond.survivalRate}%`
     })
 
