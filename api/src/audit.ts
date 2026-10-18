@@ -4,6 +4,9 @@ let firestore: Firestore | undefined;
 
 const collectionName = (): string => process.env.FIRESTORE_COLLECTION || 'audit_events';
 
+// WHY: a named database is not (default). The client only opens (default) when databaseId is omitted.
+const databaseId = (): string => process.env.FIRESTORE_DATABASE_ID || 'sampay-firestore';
+
 // WHY: server ADC only. firebase rules deny every client read and write.
 const client = (): Firestore => {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT;
@@ -12,7 +15,7 @@ const client = (): Firestore => {
       'GOOGLE_CLOUD_PROJECT is not set. Firestore audit_events uses Application Default Credentials. There is no key file in this repo.',
     );
   }
-  if (!firestore) firestore = new Firestore({ projectId });
+  if (!firestore) firestore = new Firestore({ projectId, databaseId: databaseId() });
   return firestore;
 };
 
