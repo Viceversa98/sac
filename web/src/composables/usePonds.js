@@ -268,7 +268,7 @@ const historyLogs = ref(generateHistoryData('24h'))
 
 // Active selected pond computed
 const activePond = computed(() => {
-  return ponds.value.find(p => p.id === selectedPondId.value) || ponds.value[3]
+  return ponds.value.find(p => p.id === selectedPondId.value) || ponds.value[0]
 })
 
 // Active pond specific FCR & Biomass metrics
@@ -533,7 +533,8 @@ export function usePonds() {
   // Scenario Injections for Live Demo
   const applyScenario = (type) => {
     const target = ponds.value.find(p => p.id === 'A')
-    if (!target) return
+    if (!target) return null
+    selectedPondId.value = target.id
 
     if (type === 'hypoxia') {
       target.telemetry.do = 3.2
@@ -562,6 +563,7 @@ export function usePonds() {
       target.actuators.dosing.status = 'STANDBY'
       if (target.actuators.flush) target.actuators.flush.status = 'STANDBY'
     }
+    return target
   }
 
   // Register a new production pond
