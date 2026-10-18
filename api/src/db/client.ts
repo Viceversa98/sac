@@ -46,7 +46,7 @@ export const dbErrorStatus = (err: unknown): { status: 503 | 409; body: { error:
       status: 503,
       body: {
         error: 'database_unavailable',
-        message: 'MySQL is not reachable. Start docker compose in api/ and run db:migrate and db:seed.',
+        message: 'The database is unavailable. Pond data cannot be loaded.',
       },
     };
   }
