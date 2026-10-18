@@ -77,7 +77,7 @@ const formatText = (text) => {
           <header>
             <ShieldAlert :size="16" aria-hidden="true" />
             <strong>{{ message.actionCard.title || 'Needs your decision' }}</strong>
-            <span>{{ message.actionCard.status === 'pending' ? 'Waiting' : (message.actionCard.status === 'approved' ? 'Recorded' : 'Rejected') }}</span>
+            <span>{{ message.actionCard.status === 'pending' ? 'Waiting' : (message.actionCard.status === 'approved' ? 'Recorded' : (message.actionCard.status === 'blocked' ? 'REFUSED' : 'Cancelled')) }}</span>
           </header>
           <p>{{ message.actionCard.summary }}</p>
           <p class="decision-detail">{{ message.actionCard.targetDevice }}</p>
@@ -99,14 +99,15 @@ const formatText = (text) => {
               @click="cancelAction(message.actionCard)"
             >
               <X :size="14" aria-hidden="true" />
-              Reject
+              Cancel
             </button>
           </div>
           <p v-else-if="message.actionCard.status === 'approved'" class="decision-result">
             <CheckCircle2 :size="14" aria-hidden="true" />
             Recorded. {{ message.actionCard.resultNote || 'Simulated readings were updated.' }} No hardware command was sent.
           </p>
-          <p v-else class="decision-result">Rejected. No hardware command was sent.</p>
+          <p v-else-if="message.actionCard.status === 'blocked'" class="decision-result">REFUSED. No hardware command was sent.</p>
+          <p v-else class="decision-result">Cancelled. No hardware command was sent.</p>
         </div>
       </article>
 
@@ -115,8 +116,8 @@ const formatText = (text) => {
 
     <div class="agent-prompts">
       <button type="button" :disabled="isThinking" @click="handlePrompt('Morning briefing')">Morning briefing</button>
-      <button type="button" :disabled="isThinking" @click="handlePrompt('tambah molase kolam ' + activePond.id)">Molasses dose</button>
-      <button type="button" :disabled="isThinking" @click="handlePrompt('nyalakan aerator kolam ' + activePond.id + ' 2 jam')">Start aerator</button>
+      <button type="button" :disabled="isThinking" @click="handlePrompt('dose molasses in pond ' + activePond.id)">Molasses dose</button>
+      <button type="button" :disabled="isThinking" @click="handlePrompt('run aerator pond ' + activePond.id + ' for 2 hours')">Start aerator</button>
     </div>
 
     <form class="agent-composer" @submit.prevent="handleSend">

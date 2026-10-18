@@ -42,7 +42,7 @@ defineProps({
 
     <!-- Quick Stats Pills -->
     <div class="stats-pills">
-      <div class="stat-pill" title="Estimasi Biomassa Seluruh Kolam">
+      <div class="stat-pill" title="Estimated biomass for every pond">
         <Layers class="pill-icon text-cyan" :size="15" />
         <div class="pill-data">
           <span class="pill-val font-mono">{{ globalFarmMetrics.totalBiomassKg.toLocaleString() }} kg</span>

@@ -59,9 +59,19 @@ const paramUnit = (param) => {
   return ''
 }
 
-const statusClass = (status) => {
-  if (status === 'BAHAYA') return 'badge-rose'
-  if (status === 'PERHATIAN') return 'badge-amber'
+const statusLabel = (fact) => {
+  const value = Number(fact.value)
+  if (fact.param?.startsWith('do_')) return value < 4.5 ? 'Low' : 'In range'
+  if (fact.param?.startsWith('tan_') || fact.param?.startsWith('nh3_')) return value > 0.05 ? 'High' : 'In range'
+  if (fact.status === 'OK') return 'In range'
+  if (fact.status === 'BAHAYA') return 'Low'
+  return 'Check'
+}
+
+const statusClass = (fact) => {
+  const label = statusLabel(fact)
+  if (label === 'Low' || label === 'High') return 'badge-rose'
+  if (label === 'Check') return 'badge-amber'
   return 'badge-emerald'
 }
 
@@ -190,7 +200,7 @@ const formatMarkdown = (text) => {
                     <th scope="row">{{ PARAM_LABELS[fact.param] || fact.param }}</th>
                     <td>{{ formatFactValue(fact) }}</td>
                     <td>
-                      <span class="badge" :class="statusClass(fact.status)">{{ fact.status }}</span>
+                      <span class="badge" :class="statusClass(fact)">{{ statusLabel(fact) }}</span>
                     </td>
                   </tr>
                 </tbody>
@@ -224,7 +234,7 @@ const formatMarkdown = (text) => {
                   'badge-rose': msg.actionCard.status === 'cancelled'
                 }"
               >
-                {{ msg.actionCard.status === 'pending' ? 'Waiting' : (msg.actionCard.status === 'approved' ? 'Recorded' : 'Rejected') }}
+                {{ msg.actionCard.status === 'pending' ? 'Waiting' : (msg.actionCard.status === 'approved' ? 'Recorded' : (msg.actionCard.status === 'blocked' ? 'REFUSED' : 'Cancelled')) }}
               </span>
             </div>
 
@@ -256,7 +266,7 @@ const formatMarkdown = (text) => {
                 @click="cancelAction(msg.actionCard)"
               >
                 <X :size="15" />
-                <span>Reject</span>
+                <span>Cancel</span>
               </button>
             </div>
 
@@ -266,7 +276,7 @@ const formatMarkdown = (text) => {
             </div>
             <div v-else class="hitl-status-resolved cancelled">
               <X :size="15" />
-              <span>Rejected. No hardware command was sent.</span>
+              <span>{{ msg.actionCard.status === 'blocked' ? 'REFUSED.' : 'Cancelled.' }} No hardware command was sent.</span>
             </div>
           </div>
         </div>

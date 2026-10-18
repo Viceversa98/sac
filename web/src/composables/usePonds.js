@@ -8,7 +8,7 @@ const isLiveSimulationRunning = ref(true)
 const ponds = ref([
   {
     id: 'A',
-    name: 'Kolam A (bioflok bundar)',
+    name: 'Pond A (round biofloc)',
     species: 'Red Tilapia (Oreochromis niloticus)',
     phase: 'Finisher Stage (Ready for Harvest)',
     fishCount: 1850,
@@ -67,7 +67,7 @@ const ponds = ref([
   },
   {
     id: 'B',
-    name: 'Kolam B (bioflok bundar)',
+    name: 'Pond B (round biofloc)',
     species: 'Black Tilapia (Gift Strain)',
     phase: 'Grower Stage (Rapid Growth)',
     fishCount: 2200,
@@ -130,7 +130,7 @@ const operationalLogs = ref([
     id: 'ACT-9405',
     time: '11:25:40 WIB',
     pondId: 'A',
-    pondName: 'Kolam A (bioflok bundar)',
+    pondName: 'Pond A (round biofloc)',
     category: 'FEEDING',
     type: 'AUTO',
     actor: 'Feeder schedule',
@@ -144,7 +144,7 @@ const operationalLogs = ref([
     id: 'ACT-9404',
     time: '10:45:12 WIB',
     pondId: 'A',
-    pondName: 'Kolam A (bioflok bundar)',
+    pondName: 'Pond A (round biofloc)',
     category: 'MOLASSES',
     type: 'MANUAL_ADJUST',
     actor: 'Ilfa Hidayat (Supervisor Adjustment)',
@@ -158,7 +158,7 @@ const operationalLogs = ref([
     id: 'ACT-9403',
     time: '09:15:30 WIB',
     pondId: 'B',
-    pondName: 'Kolam B (bioflok bundar)',
+    pondName: 'Pond B (round biofloc)',
     category: 'AERATION',
     type: 'AUTO',
     actor: 'Aerator schedule',
@@ -172,7 +172,7 @@ const operationalLogs = ref([
     id: 'ACT-9402',
     time: '07:30:00 WIB',
     pondId: 'A',
-    pondName: 'Kolam A (bioflok bundar)',
+    pondName: 'Pond A (round biofloc)',
     category: 'FEEDING',
     type: 'AUTO',
     actor: 'Morning Schedule Window',
@@ -186,7 +186,7 @@ const operationalLogs = ref([
     id: 'ACT-9401',
     time: 'Yesterday 16:20 WIB',
     pondId: 'B',
-    pondName: 'Kolam B (bioflok bundar)',
+    pondName: 'Pond B (round biofloc)',
     category: 'SIPHON_FLUSH',
     type: 'MANUAL_ADJUST',
     actor: 'Ilfa Hidayat (Supervisor Adjustment)',
@@ -575,7 +575,7 @@ export function usePonds() {
     const volumeM3 = Number(newPondData.volumeM3) || 50
     const initialBiomassKg = Number(newPondData.initialBiomassKg) || Number(((fishCount * avgWeightGrams) / 1000).toFixed(1))
     const targetHarvestWeightGrams = Number(newPondData.targetHarvestWeightGrams) || 850
-    const pondName = newPondData.name?.trim() || `Kolam ${nextIdx}`
+    const pondName = newPondData.name?.trim() || `Pond ${nextIdx}`
 
     const newPond = {
       id: pondId,

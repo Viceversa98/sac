@@ -6,7 +6,7 @@ import { citationsFor } from '../citations.js';
 import { dbErrorStatus, getPond, insertToolCall, latestPoint } from '../db/repo.js';
 import { geminiModel, parseIntentText, streamGenerate } from '../gemini.js';
 import { isRepairRequest, parseIntentLocal, planFromIntent, planRepair, type PlannedCall } from '../proposals.js';
-import { fallbackProposal, fallbackRefusal, promptC, promptD } from '../prompts.js';
+import { fallbackProposal, fallbackRefusal, promptC } from '../prompts.js';
 import { demoRateLimit } from '../rate-limit.js';
 import { chatBodySchema, intentSchema } from '../schemas.js';
 import { ingestSopFiles, listChunks, retrieveSop } from '../sop/store.js';
@@ -140,29 +140,19 @@ const formatReading = (value: number | null | undefined): string =>
   value == null || Number.isNaN(value) ? 'unavailable' : String(value);
 
 const readingSentence = (
-  lang: 'id' | 'en',
   pondId: string,
   oxygen: number | null | undefined,
   ammonia: number | null | undefined,
   ending: 'status' | 'healthy' | 'repair',
 ): string => {
-  const o = formatReading(oxygen);
-  const a = formatReading(ammonia);
-  if (lang === 'id') {
-    const numbers = `Kolam ${pondId}: oksigen ${o} mg/L, amonia ${a} mg/L.`;
-    if (ending === 'healthy') return `${numbers} Dalam rentang. Tidak ada kartu untuk disetujui. Data SIMULATED.`;
-    if (ending === 'repair') return `${numbers} Setujui kartu untuk mencatat perbaikan. Tidak ada perintah perangkat sebelum disetujui. Data SIMULATED.`;
-    return `${numbers} Data SIMULATED.`;
-  }
-  const numbers = `Pond ${pondId}: oxygen ${o} mg/L, ammonia ${a} mg/L.`;
-  if (ending === 'healthy') return `${numbers} In range. Nothing to approve. Data is SIMULATED.`;
-  if (ending === 'repair') return `${numbers} Approve the card to record the fix. No hardware command is sent until you approve. Data is SIMULATED.`;
-  return `${numbers} Data is SIMULATED.`;
+  const numbers = `Pond ${pondId}: oxygen ${formatReading(oxygen)} mg/L, ammonia ${formatReading(ammonia)} mg/L.`;
+  if (ending === 'healthy') return `${numbers} In range. Nothing to approve. Data is simulated.`;
+  if (ending === 'repair') return `${numbers} Approve the card to record the fix. No hardware command is sent until you approve. Data is simulated.`;
+  return `${numbers} Data is simulated.`;
 };
 
 const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: number; body: Record<string, unknown> } }> => {
-  const { intent, model: intentModel } = await readIntent(body.message, body.lang);
-  const lang = body.lang ?? intent.lang;
+  const { intent, model: intentModel } = await readIntent(body.message, 'en');
   const pondId = intent.pond_id ?? 'A';
   const pond = await getPond(pondId);
   if (!pond) return { error: { status: 404, body: { error: 'not_found', message: `Unknown pond ${pondId}` } } };
@@ -178,9 +168,9 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
   if (repair) {
     const calls = planRepair(pondContext);
     if (calls.length === 0) {
-      return fixedTurn(intent, intentModel, readingSentence(lang, pondId, pondContext.latest_do, pondContext.latest_tan, 'healthy'));
+      return fixedTurn(intent, intentModel, readingSentence(pondId, pondContext.latest_do, pondContext.latest_tan, 'healthy'));
     }
-    const reply = readingSentence(lang, pondId, pondContext.latest_do, pondContext.latest_tan, 'repair');
+    const reply = readingSentence(pondId, pondContext.latest_do, pondContext.latest_tan, 'repair');
     return {
       pace: true,
       chunks: textChunks(reply),
@@ -188,7 +178,7 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
     };
   }
   if (intent.intent === 'status_query') {
-    return fixedTurn(intent, intentModel, readingSentence(lang, pondId, pondContext.latest_do, pondContext.latest_tan, 'status'));
+    return fixedTurn(intent, intentModel, readingSentence(pondId, pondContext.latest_do, pondContext.latest_tan, 'status'));
   }
   if (intent.intent === 'explain_sop' || intent.intent === 'other') {
     let chunks = await listChunks();
@@ -199,14 +189,12 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
     const found = intent.intent === 'explain_sop' ? await retrieveSop(body.message, 3) : [];
     const reply = found.length
       ? found.map((chunk) => `${chunk.doc_key}: ${chunk.citation}`).join(' ')
-      : lang === 'id'
-        ? 'Saya tidak mengubah kolam dari pesan itu. Data SIMULATED.'
-        : 'That message did not change a pond. Data is SIMULATED.';
+      : 'That message did not change a pond. Data is simulated.';
     return fixedTurn(intent, intentModel, reply, { sop: found });
   }
   const call = planFromIntent(intent, pondContext);
   if (!call) {
-    const reply = lang === 'id' ? 'Jumlah perintah belum jelas. Data SIMULATED.' : 'The command amount was not clear. Data is SIMULATED.';
+    const reply = 'The command amount was not clear. Data is simulated.';
     return fixedTurn(intent, intentModel, reply);
   }
   let chunks = await listChunks();
@@ -216,13 +204,50 @@ const openChat = async (body: ChatBody): Promise<ChatTurn | { error: { status: n
   }
   const citations = citationsFor(call.tool_name, chunks);
   const blocked = call.status === 'blocked';
-  const fallback = blocked ? fallbackRefusal(lang, call.safety) : fallbackProposal(call.safety);
-  const prompt = blocked
-    ? promptD(lang, call.safety)
-    : promptC(intent, latest, chunks.slice(0, 6), call.args);
+  const fallback = blocked ? fallbackRefusal('en', call.safety) : fallbackProposal(call.safety);
+  if (blocked) {
+    return {
+      pace: true,
+      chunks: textChunks(fallback),
+      finish: async (reply) => {
+        const text = reply.trim() || fallback;
+        const id = await insertToolCall({
+          pond_id: call.pond_id,
+          tool_name: call.tool_name,
+          args: call.args,
+          rationale: text,
+          citations,
+          safety_result: call.safety,
+          status: call.status,
+          model: null,
+          prompt_id: call.prompt_id,
+        });
+        const audit = await appendAudit({
+          tool_call_id: id,
+          pond_id: call.pond_id,
+          event: 'refused',
+          tool_name: call.tool_name,
+          args: call.args,
+          safety_result: call.safety,
+          citations,
+          actor: { agent: 'sampay', model: null, prompt_id: call.prompt_id },
+          note: 'REFUSED',
+        });
+        return {
+          simulated: true,
+          intent,
+          reply: text,
+          tool_call: { id, ...call, citations },
+          model: intentModel,
+          audit_sync: audit.audit_sync,
+        };
+      },
+    };
+  }
+  const prompt = promptC(intent, latest, chunks.slice(0, 6), call.args);
   return {
     pace: false,
-    chunks: modelChunks(prompt, !blocked, fallback),
+    chunks: modelChunks(prompt, true, fallback),
     finish: async (reply) => {
       const text = reply.trim() || fallback;
       const wordedModel = reply.trim() ? geminiModel() : null;

@@ -33,7 +33,7 @@ const defaultId = computed(() => {
 // Form state
 const form = ref({
   id: defaultId.value,
-  name: `Kolam ${nextPondNumber.value}`,
+  name: `Pond ${nextPondNumber.value}`,
   volumeM3: 50,
   species: 'Red Tilapia (Oreochromis niloticus)',
   phase: 'Nursery Stage (Fingerlings)',
@@ -164,7 +164,7 @@ const handleSubmit = () => {
                 v-model="form.name" 
                 type="text" 
                 class="form-input font-sans" 
-                placeholder="For example: Kolam C" 
+                placeholder="For example: Pond C" 
                 :class="{ error: errors.name }"
               />
               <span v-if="errors.name" class="error-msg">{{ errors.name }}</span>

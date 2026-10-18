@@ -1,6 +1,7 @@
 import {
-  DO_CRITICAL_MGL,
+  DO_FLOOR_MGL,
   DO_LOW_MGL,
+  DO_SOP_MGL,
   NH3_OPT_MGL,
   PH_MAX,
   PH_MIN,
@@ -49,11 +50,14 @@ const oxygenMetric = (raw) => {
   const value = numberOrNull(raw)
   const shown = `${formatNumber(value, 2)} mg/L`
   if (value === null) return metric('do', 'Oxygen (DO)', shown, 'Missing', 'watch', 'No reading.')
-  if (value < DO_CRITICAL_MGL) {
-    return metric('do', 'Oxygen (DO)', shown, 'Low', 'unhealthy', `Below the ${DO_CRITICAL_MGL} mg/L critical limit.`)
+  if (value < DO_FLOOR_MGL) {
+    return metric('do', 'Oxygen (DO)', shown, 'Low', 'unhealthy', `Below the ${DO_FLOOR_MGL} mg/L critical limit.`)
+  }
+  if (value <= DO_SOP_MGL) {
+    return metric('do', 'Oxygen (DO)', shown, 'Low', 'unhealthy', `At or below the ${DO_SOP_MGL} mg/L SOP aerator line.`)
   }
   if (value < DO_LOW_MGL) {
-    return metric('do', 'Oxygen (DO)', shown, 'Low', 'watch', `Below the ${DO_LOW_MGL} mg/L safe band.`)
+    return metric('do', 'Oxygen (DO)', shown, 'Low', 'watch', `Below the ${DO_LOW_MGL} mg/L watch band. Not an SOP limit.`)
   }
   return metric('do', 'Oxygen (DO)', shown, 'In range', 'ok', `At or above ${DO_LOW_MGL} mg/L.`)
 }

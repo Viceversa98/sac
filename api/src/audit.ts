@@ -22,7 +22,7 @@ const client = (): Firestore => {
 export type AuditEventInput = {
   tool_call_id?: number | null;
   pond_id?: string | null;
-  event: 'proposed' | 'blocked' | 'approved' | 'rejected' | 'executed_simulated' | 'demo_reset' | 'diag';
+  event: 'proposed' | 'blocked' | 'refused' | 'approved' | 'rejected' | 'executed_simulated' | 'demo_reset' | 'diag';
   tool_name?: string | null;
   args?: unknown;
   safety_result?: unknown;
