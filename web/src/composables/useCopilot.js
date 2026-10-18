@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { apiUrl } from '../api'
 import { useToast } from './useToast'
+import { usePonds } from './usePonds'
 
 const nowLabel = () =>
   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' WIB'
@@ -77,6 +78,7 @@ const typeInto = async (draft, full) => {
 
 export function useCopilot() {
   const { showToast } = useToast()
+  const { applyApprovedAction } = usePonds()
 
   const isThinking = ref(false)
   const autoPilotMode = ref(false)
@@ -190,10 +192,15 @@ export function useCopilot() {
 
       if (decision === 'approve') {
         actionCard.status = 'approved'
-        showToast('Approved. Audit row recorded as executed_simulated.', 'success')
+        const result = applyApprovedAction(actionCard.type, actionCard.pondId)
+        const reading = result
+          ? ` Simulated pond quality for ${result.name}: oxygen ${Number(result.do).toFixed(2)} mg/L, ammonia ${Number(result.ammonia).toFixed(3)} mg/L.`
+          : ''
+        actionCard.resultNote = reading.trim()
+        showToast(`Approved.${reading} No equipment was switched on.`, 'success')
         pushAssistant(
           messages,
-          'Approved. Status is executed_simulated. An audit row was recorded. No hardware command was sent.'
+          `Approved. The decision was recorded.${reading} No hardware command was sent.`
         )
         return
       }

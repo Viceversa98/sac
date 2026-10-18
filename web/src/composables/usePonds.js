@@ -531,8 +531,8 @@ export function usePonds() {
   }
 
   // Scenario Injections for Live Demo
-  const applyScenario = (type) => {
-    const target = ponds.value.find(p => p.id === 'A')
+  const applyScenario = (type, pondId = 'A') => {
+    const target = ponds.value.find(p => p.id === pondId) || ponds.value.find(p => p.id === 'A')
     if (!target) return null
     selectedPondId.value = target.id
 
@@ -856,6 +856,36 @@ export function usePonds() {
     return newLog
   }
 
+  const applyApprovedAction = (toolName, pondId) => {
+    const pond = ponds.value.find((item) => item.id === pondId)
+    if (!pond) return null
+
+    if (toolName === 'start_aerator') {
+      pond.actuators.aerator.status = 'RUNNING'
+      pond.actuators.aerator.powerPercent = 100
+      const raised = Math.max(Number(pond.telemetry.do) || 0, 5.2)
+      pond.telemetry.do = Number(Math.min(6.4, raised).toFixed(2))
+    } else if (toolName === 'dose_molasses_gL') {
+      pond.telemetry.ammonia = 0.02
+      pond.actuators.dosing.status = 'STANDBY'
+      pond.actuators.dosing.flowMlMin = 0
+    } else if (toolName === 'set_feeder_kg') {
+      triggerFeeder(pondId, 2, 'APPROVAL')
+    } else {
+      return null
+    }
+
+    const oxygenOk = pond.telemetry.do >= 4.5
+    const ammoniaOk = pond.telemetry.ammonia <= 0.05
+    pond.status = oxygenOk && ammoniaOk ? 'OPTIMAL' : 'CAUTION'
+    pond.healthScore = oxygenOk && ammoniaOk ? 96 : 78
+    return {
+      name: pond.name,
+      do: pond.telemetry.do,
+      ammonia: pond.telemetry.ammonia
+    }
+  }
+
   return {
     ponds,
     selectedPondId,
@@ -874,6 +904,7 @@ export function usePonds() {
     addOperationalLog,
     generateHistoryData,
     applyScenario,
+    applyApprovedAction,
     addPond,
     harvestPondCycle,
     transferPondFish,

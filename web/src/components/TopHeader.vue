@@ -3,9 +3,9 @@ import { ref } from 'vue'
 import { apiUrl } from '../api'
 import { usePonds } from '../composables/usePonds'
 import { useToast } from '../composables/useToast'
-import { SlidersHorizontal, RotateCcw } from 'lucide-vue-next'
+import { SlidersHorizontal, RotateCcw, Sparkles } from 'lucide-vue-next'
 
-const emit = defineEmits(['toggle-simulator'])
+const emit = defineEmits(['toggle-simulator', 'toggle-agent'])
 const { refreshFromApi } = usePonds()
 const { showToast } = useToast()
 const isResetting = ref(false)
@@ -13,6 +13,10 @@ const resetError = ref('')
 
 defineProps({
   simulatorOpen: {
+    type: Boolean,
+    default: false
+  },
+  agentOpen: {
     type: Boolean,
     default: false
   }
@@ -60,6 +64,20 @@ const handleResetDemo = async () => {
         <span>{{ isResetting ? 'Resetting…' : 'Reset demo' }}</span>
       </button>
       <span v-if="resetError" class="reset-error" role="alert">{{ resetError }}</span>
+
+      <button
+        id="btn-toggle-agent"
+        type="button"
+        class="btn-simulator"
+        :class="{ active: agentOpen }"
+        :aria-pressed="agentOpen"
+        aria-controls="agent-sidebar"
+        aria-label="Open agent sidebar"
+        @click="emit('toggle-agent')"
+      >
+        <Sparkles :size="15" aria-hidden="true" />
+        <span>{{ agentOpen ? 'Close agent' : 'Agent' }}</span>
+      </button>
 
       <button
         id="btn-toggle-simulator"

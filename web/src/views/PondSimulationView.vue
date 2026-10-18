@@ -43,7 +43,7 @@ const scenarios = [
     id: 'sim-scenario-hypoxia',
     type: 'hypoxia',
     label: 'Hypoxia',
-    detail: 'DO 3.2 mg/L on Kolam A',
+    detail: 'DO 3.2 mg/L on the selected pond',
     icon: AlertTriangle,
     tone: 'rose'
   },
@@ -51,7 +51,7 @@ const scenarios = [
     id: 'sim-scenario-ammonia',
     type: 'ammonia_spike',
     label: 'Ammonia spike',
-    detail: 'TAN 0.082 ppm on Kolam A',
+    detail: 'TAN 0.082 ppm on the selected pond',
     icon: Biohazard,
     tone: 'amber'
   },
@@ -59,7 +59,7 @@ const scenarios = [
     id: 'sim-scenario-feeding',
     type: 'feeding_window',
     label: 'Feed window',
-    detail: 'Feeder ready on Kolam A',
+    detail: 'Feeder ready on the selected pond',
     icon: Utensils,
     tone: 'sky'
   }
@@ -70,8 +70,7 @@ const handleSelectPond = (pondId) => {
 }
 
 const handleScenario = (type) => {
-  applyScenario(type)
-  setPond('A')
+  applyScenario(type, activePond.value?.id || 'A')
 }
 
 const handleProjection = (kind) => {
