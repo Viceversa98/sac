@@ -48,6 +48,7 @@ const seedJudgeQueue = async () => {
     max_feed_kg: pond?.max_feed_kg ?? null,
     latest_do: latestB?.do_mgL ?? null,
     latest_tan: latestB?.tan_mgL ?? null,
+    latest_nh3: latestB?.nh3_mgL ?? null,
   });
   const refused = blockedMolassesProposal('A', latestA?.do_mgL ?? null);
   return {

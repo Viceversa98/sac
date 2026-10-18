@@ -1,7 +1,7 @@
 {"_note": "SYNTHETIC ponds for the demo. Volumes are invented round numbers, not a real farm.",
  "ponds": [
-  {"id": "A", "name": "Kolam A (bioflok bundar)", "volume_m3": 30, "max_feed_kg": 3.0, "is_simulated": true},
-  {"id": "B", "name": "Kolam B (bioflok bundar)", "volume_m3": 30, "max_feed_kg": 3.0, "is_simulated": true}
+  {"id": "A", "name": "Pond A (round biofloc pond)", "volume_m3": 30, "max_feed_kg": 3.0, "is_simulated": true},
+  {"id": "B", "name": "Pond B (round biofloc pond)", "volume_m3": 30, "max_feed_kg": 3.0, "is_simulated": true}
  ],
  "users": [
   {"id": 1, "name": "Pak Budi (supervisor, fictitious)", "role": "supervisor", "lang": "id"},

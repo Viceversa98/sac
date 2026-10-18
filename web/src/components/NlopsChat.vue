@@ -94,8 +94,11 @@ const formatFactValue = (fact) => {
   return `${fact.value}${paramUnit(fact.param)}${when}`
 }
 
+const BRIEFING_SOURCE = 'Source: SOP-01 (Avnimelech 1999).'
+
 const displayText = (msg) => {
-  const text = msg.text || ''
+  let text = msg.text || ''
+  if (msg.isBriefing) text = text.replace(BRIEFING_SOURCE, '').trim()
   const isNodeSummary = text.startsWith('Data SIMULATED.') || text.startsWith('SIMULATED data.')
   if (msg.facts?.length && isNodeSummary) return text.split('\n')[0]
   return text
@@ -128,6 +131,7 @@ const formatMarkdown = (text) => {
           <span class="status-sub">
             Ask what a pond needs. Approve writes a log and does not control equipment.
           </span>
+          <span class="status-sub">Gemini on Agent Platform · dose computed in code, cited to SOP-01</span>
         </div>
       </div>
 
@@ -207,6 +211,7 @@ const formatMarkdown = (text) => {
               </table>
             </section>
           </div>
+          <p v-if="msg.isBriefing && !msg.streaming" class="briefing-source">Source: SOP-01 (Avnimelech 1999).</p>
           <p v-if="msg.englishCaption && !groupedFacts(msg).length" class="english-caption" lang="en">
             {{ msg.englishCaption }}
           </p>
@@ -548,6 +553,12 @@ const formatMarkdown = (text) => {
   background: #ffffff;
   border: 1px solid var(--emerald-200);
   box-shadow: var(--shadow-xs);
+}
+
+.briefing-source {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
 }
 
 .english-caption {

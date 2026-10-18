@@ -3,7 +3,7 @@ import { streamSSE } from 'hono/streaming';
 import { zValidator } from '@hono/zod-validator';
 import { appendAudit } from '../audit.js';
 import { citationsFor } from '../citations.js';
-import { dbErrorStatus, insertToolCall, listPonds, telemetryWindow } from '../db/repo.js';
+import { dbErrorStatus, insertToolCall, listPonds, listToolCalls, telemetryWindow } from '../db/repo.js';
 import { demoRateLimit } from '../rate-limit.js';
 import { englishCaption, factsForPond, planBriefingActions, type Fact } from '../proposals.js';
 import { fallbackBriefing } from '../prompts.js';
@@ -38,6 +38,7 @@ const prepareBriefing = async (
   const proposals = [];
   const facts: Fact[] = [];
   let auditSync: 'ok' | 'pending' = 'ok';
+  const waiting = await listToolCalls('proposed');
   for (const pond of chosen) {
     const window = await telemetryWindow(pond.id, 24);
     const pondStats = window?.stats;
@@ -56,6 +57,8 @@ const prepareBriefing = async (
     );
     pondPayload.push({ pond_id: pond.id, stats: pondStats, actions: calls.map((call) => call.args) });
     for (const call of calls) {
+      const alreadyWaiting = waiting.some((row) => row.pond_id === call.pond_id && row.tool_name === call.tool_name && row.status === 'proposed');
+      if (alreadyWaiting) continue;
       const citations = citationsFor(call.tool_name, chunks);
       const id = await insertToolCall({
         pond_id: call.pond_id,

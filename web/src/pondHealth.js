@@ -1,4 +1,5 @@
 import {
+  DO_CRITICAL_MGL,
   DO_FLOOR_MGL,
   DO_LOW_MGL,
   DO_SOP_MGL,

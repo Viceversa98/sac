@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { and, desc, eq } from 'drizzle-orm';
 import { parseTelemetryCsv, type TelemetryRow } from '../csv.js';
 import { telemetryFile } from '../paths.js';
-import { formatUtcSql, formatWib, parseUtcSql, stats, withinHours, type ReadingPoint } from '../stats.js';
+import { formatUtcSql, formatWib, parseUtcSql, stats, withinHours } from '../stats.js';
 import { dbErrorStatus, getDb, insertIdOf } from './client.js';
 import { ensureSeed } from './seed.js';
 import { approvals, ponds, telemetryReadings, toolCalls } from './schema.js';
@@ -151,7 +151,7 @@ export const telemetryWindow = async (pondId: string, hours: number) => {
   };
 };
 
-export const latestPoint = async (pondId: string): Promise<ReadingPoint & { pond_id: string } | null> => {
+export const latestPoint = async (pondId: string): Promise<TelemetryRow | null> => {
   const [row] = await getDb()
     .select()
     .from(telemetryReadings)
@@ -211,6 +211,32 @@ const mapToolCall = (row: typeof toolCalls.$inferSelect) => ({
   prompt_id: row.promptId,
   created_at: row.createdAt,
 });
+
+export const recordApprovedReading = async (pondId: string, toolName: string): Promise<void> => {
+  const latest = await latestPoint(pondId);
+  if (!latest) return;
+  const next: TelemetryRow = {
+    ts: new Date(),
+    pond_id: pondId,
+    do_mgL: latest.do_mgL,
+    temp_c: latest.temp_c,
+    ph: latest.ph,
+    tan_mgL: latest.tan_mgL,
+    nh3_mgL: latest.nh3_mgL,
+    tds_ppm: latest.tds_ppm,
+    source: 'simulated',
+  };
+  if (toolName === 'dose_molasses_gL') {
+    next.tan_mgL = 0.02;
+    next.nh3_mgL = 0.02;
+  } else if (toolName === 'start_aerator') {
+    const raised = Math.max(latest.do_mgL ?? 0, 5.2);
+    next.do_mgL = Math.round(Math.min(6.4, raised) * 100) / 100;
+  } else {
+    return;
+  }
+  await ingestReadings([next]);
+};
 
 export const decideToolCall = async (id: number, decision: 'approved' | 'rejected', note?: string) => {
   await ensureSeed();

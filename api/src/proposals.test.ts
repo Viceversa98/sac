@@ -77,7 +77,7 @@ describe('repair from the latest reading', () => {
   });
 
   it('seeds one waiting Kolam B dose and one refused 0.20 g/L call', () => {
-    const pending = pendingKolamProposal(pond('B', 5.27, 1));
+    const pending = pendingKolamProposal({ ...pond('B', 5.27, 1), latest_nh3: 0.06 });
     expect(pending.pond_id).toBe('B');
     expect(pending.status).toBe('proposed');
     expect(pending.tool_name).toBe('dose_molasses_gL');

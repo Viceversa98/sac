@@ -11,7 +11,7 @@ type SeedFile = {
 };
 
 export const seedDatabase = async (): Promise<void> => {
-  const file = JSON.parse(readFileSync(pondsFile(), 'utf8')) as SeedFile;
+  const file = readSeedFile();
   const db = getDb();
   for (const user of file.users) {
     await db
@@ -40,11 +40,24 @@ export const seedDatabase = async (): Promise<void> => {
   }
 };
 
+const readSeedFile = (): SeedFile => JSON.parse(readFileSync(pondsFile(), 'utf8')) as SeedFile;
+
+export const refreshPondNames = async (): Promise<void> => {
+  const file = readSeedFile();
+  const db = getDb();
+  for (const pond of file.ponds) {
+    await db.update(ponds).set({ name: pond.name }).where(eq(ponds.id, pond.id));
+  }
+};
+
 export const ensureSeed = async (): Promise<void> => {
   const db = getDb();
   const existing = await db.select({ id: users.id }).from(users).where(eq(users.id, 1)).limit(1);
-  if (existing.length > 0) return;
-  await seedDatabase();
+  if (existing.length === 0) {
+    await seedDatabase();
+    return;
+  }
+  await refreshPondNames();
 };
 
 const isDirectRun = process.argv[1]?.includes('seed');
