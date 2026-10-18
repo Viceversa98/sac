@@ -22,6 +22,8 @@ const auditMessage = ref('Loading the audit log.')
 
 const eventStatus = (event) => {
   if (event === 'blocked' || event === 'refused') return 'REFUSED'
+  if (event === 'executed_simulated') return 'RECORDED'
+  if (event === 'rejected') return 'CANCELLED'
   return String(event || 'recorded').replaceAll('_', ' ').toUpperCase()
 }
 
@@ -42,7 +44,8 @@ const loadAudit = async () => {
       return
     }
     const body = await response.json()
-    auditLogs.value = (body.events || []).map((event) => ({
+    const events = body.events || []
+    const rows = events.map((event) => ({
       id: event.id,
       time: event.recorded_at || '',
       pondId: event.pond_id || '',
@@ -56,6 +59,30 @@ const loadAudit = async () => {
       status: eventStatus(event.event),
       notes: event.note || (event.safety_result && event.safety_result.detail) || 'Recorded in Firestore audit_events.'
     }))
+    const callsResponse = await fetch(apiUrl('/api/tool-calls'), { headers: { Accept: 'application/json' } })
+    if (callsResponse.ok) {
+      const callsBody = await callsResponse.json()
+      for (const call of callsBody.tool_calls || []) {
+        if (call.status !== 'executed_simulated' && call.status !== 'rejected') continue
+        const already = events.some((event) => String(event.tool_call_id) === String(call.id) && event.event === call.status)
+        if (already) continue
+        rows.unshift({
+          id: `call-${call.id}`,
+          time: call.created_at || '',
+          pondId: call.pond_id || '',
+          pondName: call.pond_id ? `Pond ${call.pond_id}` : 'Farm',
+          category: call.tool_name === 'dose_molasses_gL' ? 'MOLASSES' : (call.tool_name === 'set_feeder_kg' ? 'FEEDING' : (call.tool_name || 'audit')),
+          type: 'AUTO',
+          actor: 'sampay',
+          action: call.tool_name || call.status,
+          dosage: doseText(call),
+          hardware: 'No hardware command',
+          status: eventStatus(call.status),
+          notes: 'Recorded from the approval table.'
+        })
+      }
+    }
+    auditLogs.value = rows
     auditMessage.value = auditLogs.value.length ? '' : 'No audit events yet. Reset the demo to seed one.'
   } catch {
     auditLogs.value = []

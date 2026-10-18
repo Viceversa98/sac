@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { appendAudit, listAuditEvents } from '../audit.js';
-import { dbErrorStatus, decideToolCall, listToolCalls } from '../db/repo.js';
+import { dbErrorStatus, decideToolCall, listToolCalls, recordApprovedReading } from '../db/repo.js';
 import { demoRateLimit } from '../rate-limit.js';
 import { noteBodySchema } from '../schemas.js';
 
@@ -64,6 +64,9 @@ const decide = (decision: 'approved' | 'rejected') => async (c: Context) => {
     if (result.error === 'not_found') return c.json({ error: 'not_found' }, 404);
     if (result.error === 'conflict' || !result.row) {
       return c.json({ error: 'conflict', message: 'Only a proposed tool call can be decided.' }, 409);
+    }
+    if (decision === 'approved') {
+      await recordApprovedReading(result.row.pond_id, result.row.tool_name);
     }
     const event = decision === 'approved' ? 'executed_simulated' : 'rejected';
     const audit = await appendAudit({

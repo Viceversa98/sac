@@ -93,7 +93,7 @@ let sharedCopilot
 
 function createCopilot() {
   const { showToast } = useToast()
-  const { applyApprovedAction } = usePonds()
+  const { applyApprovedAction, refreshFromApi } = usePonds()
 
   const isThinking = ref(false)
   const autoPilotMode = ref(false)
@@ -161,19 +161,27 @@ function createCopilot() {
     }
   }
 
+  const cardStatus = (call) => {
+    if (call.status === 'proposed') return 'pending'
+    if (call.status === 'blocked') return 'blocked'
+    if (call.status === 'executed_simulated' || call.status === 'approved') return 'approved'
+    return 'cancelled'
+  }
+
   const cardFromCall = (call) => {
     const words = describeCall(call)
-    const pending = call.status === 'proposed'
+    const status = cardStatus(call)
+    const title = status === 'pending' ? 'Needs your decision' : (status === 'blocked' ? 'REFUSED' : (status === 'approved' ? 'Recorded' : 'Cancelled'))
     return {
       id: String(call.id),
       toolCallId: String(call.id),
-      title: pending ? 'Needs your decision' : 'REFUSED',
+      title,
       pondId: call.pond_id,
       type: call.tool_name,
       targetDevice: words.label,
       summary: words.summary,
       description: words.detail,
-      status: pending ? 'pending' : 'blocked'
+      status
     }
   }
 
@@ -207,7 +215,9 @@ function createCopilot() {
 
       if (decision === 'approve') {
         actionCard.status = 'approved'
+        await refreshFromApi()
         const result = applyApprovedAction(actionCard.type, actionCard.pondId)
+        window.dispatchEvent(new Event('sampay-audit-changed'))
         const reading = result
           ? ` Simulated pond quality for ${result.name}: oxygen ${Number(result.do).toFixed(2)} mg/L, ammonia ${Number(result.ammonia).toFixed(3)} mg/L.`
           : ''
@@ -302,6 +312,8 @@ function createCopilot() {
           draft.streaming = false
           for (const proposal of data.proposals || []) {
             if (proposal.status !== 'proposed' && proposal.status !== 'blocked') continue
+            const duplicate = messages.value.some((message) => message.actionCard?.status === 'pending' && message.actionCard?.pondId === proposal.pond_id && message.actionCard?.type === proposal.tool_name)
+            if (duplicate) continue
             const card = cardFromCall(proposal)
             pushAssistant(messages, card.summary, { actionCard: card })
           }
@@ -335,6 +347,8 @@ function createCopilot() {
         draft.streaming = false
         for (const proposal of data.proposals || []) {
           if (proposal.status !== 'proposed' && proposal.status !== 'blocked') continue
+          const duplicate = messages.value.some((message) => message.actionCard?.status === 'pending' && message.actionCard?.pondId === proposal.pond_id && message.actionCard?.type === proposal.tool_name)
+          if (duplicate) continue
           const card = cardFromCall(proposal)
           pushAssistant(messages, card.summary, { actionCard: card })
         }
@@ -354,7 +368,7 @@ function createCopilot() {
   }
 
   const loadQueue = async () => {
-    for (const status of ['proposed', 'blocked']) {
+    for (const status of ['proposed', 'blocked', 'executed_simulated', 'rejected']) {
       try {
         const response = await fetch(apiUrl(`/api/tool-calls?status=${status}`), { headers: { Accept: 'application/json' } })
         if (!response.ok) continue

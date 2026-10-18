@@ -20,6 +20,7 @@ export type PondContext = {
   max_feed_kg: number | null;
   latest_do: number | null;
   latest_tan: number | null;
+  latest_nh3?: number | null;
 };
 
 const DEFAULT_AERATOR_MINUTES = 120;
@@ -180,7 +181,8 @@ export const planRepair = (pond: PondContext): PlannedCall[] => {
 };
 
 export const pendingKolamProposal = (pond: PondContext): PlannedCall => {
-  if (pond.latest_tan != null && pond.latest_tan > NH3_OPT_MGL) {
+  const ammoniaHigh = pond.latest_nh3 != null && pond.latest_nh3 >= NH3_OPT_MGL;
+  if (ammoniaHigh && pond.latest_tan != null && pond.latest_tan > 0) {
     const dose = suggestMolasses(pond.latest_tan, pond.volume_m3);
     if (!dose.capped) {
       const safety = checkMolasses(dose.g_per_L, pond.latest_do);
