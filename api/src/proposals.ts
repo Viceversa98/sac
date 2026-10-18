@@ -127,7 +127,7 @@ export const planFromIntent = (intent: Intent, pond: PondContext): PlannedCall |
         pond_id: pondId,
         g_per_L: gPerL,
         tan_mgL_basis: pond.latest_tan ?? 0,
-        reason: dose ? `Node dose for TAN ${pond.latest_tan} mg/L` : `Supervisor requested ${gPerL} g/L`,
+        reason: dose ? `Node dose for ammonia (TAN) ${pond.latest_tan} mg/L` : `Supervisor requested ${gPerL} g/L`,
       }),
       kg_total: kg,
     },
@@ -167,8 +167,8 @@ export const planRepair = (pond: PondContext): PlannedCall[] => {
           g_per_L: gPerL,
           tan_mgL_basis: pond.latest_tan,
           reason: dose.capped
-            ? `Refused: ${dose.unrounded_g_per_L.toFixed(3)} g/L is above 0.12 g/L for TAN ${pond.latest_tan} mg/L`
-            : `Node dose for TAN ${pond.latest_tan} mg/L in ${pond.volume_m3} m3`,
+            ? `Refused: ${dose.unrounded_g_per_L.toFixed(3)} g/L is above 0.12 g/L for ammonia (TAN) ${pond.latest_tan} mg/L`
+            : `Node dose for ammonia (TAN) ${pond.latest_tan} mg/L in ${pond.volume_m3} m3`,
         }),
         kg_total: dose.kg,
       },
@@ -195,7 +195,7 @@ export const pendingKolamProposal = (pond: PondContext): PlannedCall => {
               pond_id: pond.id,
               g_per_L: dose.g_per_L,
               tan_mgL_basis: pond.latest_tan,
-              reason: `Node dose for TAN ${pond.latest_tan} mg/L in ${pond.volume_m3} m3`,
+              reason: `Node dose for ammonia (TAN) ${pond.latest_tan} mg/L in ${pond.volume_m3} m3`,
             }),
             kg_total: dose.kg,
           },
@@ -279,8 +279,8 @@ export const planBriefingActions = (
           g_per_L: dose.capped ? dose.unrounded_g_per_L : dose.g_per_L,
           tan_mgL_basis: tan,
           reason: dose.capped
-            ? `Refused: ${(dose.unrounded_g_per_L).toFixed(3)} g/L is above 0.12 g/L for TAN ${tan} mg/L`
-            : `Node dose for TAN ${tan} mg/L in ${pond.volume_m3} m3`,
+            ? `Refused: ${(dose.unrounded_g_per_L).toFixed(3)} g/L is above 0.12 g/L for ammonia (TAN) ${tan} mg/L`
+            : `Node dose for ammonia (TAN) ${tan} mg/L in ${pond.volume_m3} m3`,
         }),
         kg_total: dose.kg,
       },
