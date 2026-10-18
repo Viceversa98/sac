@@ -25,7 +25,7 @@ const nodes = computed(() => {
   return ponds.value.map((pond, idx) => {
     const nodeNum = pond.id.replace(/\D/g, '') || (idx + 1).toString().padStart(2, '0')
     const ipLast = 100 + Number(nodeNum)
-    const basePing = pingResults.value[pond.id] || (pond.id === 'K04' ? 28 : (pond.id === 'K01' ? 34 : (pond.id === 'K02' ? 42 : 36)))
+    const basePing = pingResults.value[pond.id] || (pond.id === 'B' ? 42 : 34)
     
     // Live sensors
     const sensors = [
@@ -66,7 +66,7 @@ const nodes = computed(() => {
       },
       {
         id: 'R2',
-        name: 'VFD Aerator',
+        name: 'Aerator',
         status: aerator?.status || 'RUNNING',
         sub: `${aerator?.powerPercent || 80}%`,
         active: aerator?.status === 'RUNNING'
@@ -94,11 +94,11 @@ const nodes = computed(() => {
       ip: `192.168.1.${ipLast}`,
       mac: `24:6F:28:B4:7A:0${idx + 1}`,
       firmware: 'v2.4.1-biofloc',
-      rssi: pond.id === 'K04' ? '-52 dBm' : (pond.id === 'K01' ? '-58 dBm' : '-62 dBm'),
-      signalBars: pond.id === 'K04' ? 4 : 3,
+      rssi: pond.id === 'B' ? '-62 dBm' : '-58 dBm',
+      signalBars: pond.id === 'B' ? 3 : 4,
       status: 'ONLINE',
       pingMs: basePing,
-      uptime: pond.id === 'K04' ? '24d 9h' : (pond.id === 'K01' ? '18d 4h' : '12d 6h'),
+      uptime: pond.id === 'B' ? '12d 6h' : '18d 4h',
       sensors,
       relays
     }

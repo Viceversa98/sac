@@ -20,7 +20,7 @@ import {
 const { ponds, activePond, globalFarmMetrics, operationalLogs } = usePonds()
 
 // Scope can be 'TOTAL' or specific pond ID 'K01' | 'K02' | 'K03' | 'K04'
-const selectedPondScope = ref(activePond.value?.id || 'K04')
+const selectedPondScope = ref(activePond.value?.id || 'A')
 const selectedCategory = ref('ALL')
 const selectedSource = ref('ALL') // 'ALL' | 'AUTO' | 'MANUAL_ADJUST'
 

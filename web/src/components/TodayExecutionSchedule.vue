@@ -1,22 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { usePonds } from '../composables/usePonds'
-import { useToast } from '../composables/useToast'
 import { 
   CalendarClock, 
   Utensils, 
   Pipette, 
-  Wind, 
   CheckCircle2, 
-  Clock, 
-  Zap, 
-  Sparkles,
-  ChevronRight,
-  Flame
+  Clock
 } from 'lucide-vue-next'
 
-const { activePond, triggerFeeder, triggerMolassesDosing } = usePonds()
-const { showToast } = useToast()
+const { activePond } = usePonds()
 
 // Reactive tracker for manual overrides within the session
 const sessionOverrides = ref({})
@@ -28,7 +21,7 @@ const scheduleData = computed(() => {
   const dispensedFeed = p.actuators.feeder.dispensedTodayKg || 22.4
   const feedPercent = Math.min(100, Math.round((dispensedFeed / targetFeed) * 100))
 
-  const targetMolasses = p.id === 'K04' ? 1050 : (p.id === 'K01' ? 800 : (p.id === 'K02' ? 600 : 350))
+  const targetMolasses = p.id === 'B' ? 600 : 800
   const dispensedMolasses = p.todayMolassesGrams || 700
   const molassesPercent = Math.min(100, Math.round((dispensedMolasses / targetMolasses) * 100))
 
@@ -96,7 +89,7 @@ const scheduleData = computed(() => {
       time: '21:00 WIB',
       category: 'AERATION',
       title: 'Night Aeration Boost Protocol',
-      doseText: 'Ramp VFD Blowers to 85% RPM',
+      doseText: 'Keep the aerator running',
       condition: 'Night algae & biofloc oxygen consumption',
       status: 'SCHEDULED',
       timingBadge: 'SCHEDULED • In ~4.5 hours',
@@ -115,18 +108,6 @@ const scheduleData = computed(() => {
   }
 })
 
-// Trigger upcoming schedule early
-const handleExecuteEarly = (session) => {
-  if (session.category === 'FEEDING') {
-    triggerFeeder(activePond.value.id, session.amountKg, 'MANUAL_ADJUST')
-    showToast(`⚡ Scheduled Feed Executed: Dispensing ${session.doseText} to ${activePond.value.name}.`, 'success')
-  } else if (session.category === 'MOLASSES') {
-    triggerMolassesDosing(activePond.value.id, session.amountGrams, 'MANUAL_ADJUST')
-    showToast(`🧪 Scheduled Molasses Executed: Dispensing ${session.doseText} to ${activePond.value.name}.`, 'info')
-  }
-
-  sessionOverrides.value[session.id] = 'COMPLETED'
-}
 </script>
 
 <template>
@@ -225,19 +206,7 @@ const handleExecuteEarly = (session) => {
             <CheckCircle2 :size="11" />
             <span>COMPLETED</span>
           </span>
-          <div v-else-if="s.status === 'UPCOMING'" class="upcoming-wrap">
-            <span class="status-badge upcoming">{{ s.timingBadge }}</span>
-            <button 
-              v-if="s.canExecute"
-              :id="'btn-execute-' + s.id"
-              class="btn-trigger-early"
-              @click="handleExecuteEarly(s)"
-              title="Execute this scheduled action immediately"
-            >
-              <Zap :size="11" />
-              <span>Execute Now</span>
-            </button>
-          </div>
+          <span v-else-if="s.status === 'UPCOMING'" class="status-badge upcoming">{{ s.timingBadge }}</span>
           <span v-else class="status-badge scheduled">
             {{ s.timingBadge }}
           </span>

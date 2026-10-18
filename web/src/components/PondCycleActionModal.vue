@@ -168,7 +168,7 @@ const handleExecuteTransfer = () => {
           @click="activeTab = 'HARVEST'"
         >
           <Award :size="14" />
-          <span>Panen Ikan (Harvest Cycle)</span>
+          <span>Harvest</span>
         </button>
         <button 
           id="tab-btn-transfer"
@@ -177,7 +177,7 @@ const handleExecuteTransfer = () => {
           @click="activeTab = 'TRANSFER'"
         >
           <ArrowRightLeft :size="14" />
-          <span>Pindah Kolam (Transfer / Grading)</span>
+          <span>Move fish</span>
         </button>
       </div>
 
@@ -191,10 +191,10 @@ const handleExecuteTransfer = () => {
             @click="setHarvestPreset('FULL')"
           >
             <div class="mode-head">
-              <span class="mode-title">Panen Total (Full Harvest)</span>
+              <span class="mode-title">Full harvest</span>
               <span class="badge badge-emerald">Complete Cycle</span>
             </div>
-            <p class="mode-desc">Akhiri seluruh siklus budidaya kolam, kuras seluruh biomassa ikan (100%), hitung FCR final dan kosongkan kolam untuk sanitasi/tebar baru.</p>
+            <p class="mode-desc">End the cycle, record the full harvest, and clear the pond for the next stocking. This stays in the demo.</p>
           </button>
 
           <button 
@@ -204,10 +204,10 @@ const handleExecuteTransfer = () => {
             @click="setHarvestPreset('PARTIAL')"
           >
             <div class="mode-head">
-              <span class="mode-title">Panen Parsial (Thinning)</span>
+              <span class="mode-title">Partial harvest</span>
               <span class="badge badge-sky">Selective Reduction</span>
             </div>
-            <p class="mode-desc">Panen sebagian populasi untuk mengurangi kepadatan tebar (misal: 50%), sisa ikan tetap dipelihara di kolam hingga bobot maksimal.</p>
+            <p class="mode-desc">Harvest part of the stock to lower density. The remaining fish stay in the pond. This stays in the demo.</p>
           </button>
         </div>
 
@@ -303,14 +303,14 @@ const handleExecuteTransfer = () => {
           <ArrowRightLeft :size="16" class="text-sky" />
           <div>
             <span class="alert-lead">Fish Grading & Pond Migration</span>
-            <p class="alert-desc">Pindahkan bibit atau ikan yang telah diseleksi (grading) dari {{ pond.name }} ke kolam tujuan berikutnya.</p>
+            <p class="alert-desc">Move graded fish from {{ pond.name }} to the next pond. This stays in the demo.</p>
           </div>
         </div>
 
         <!-- Destination Pond Selection -->
         <div class="form-group font-mono">
           <label class="form-label" for="target-pond">
-            <span>Select Destination Pond (Kolam Tujuan)</span>
+            <span>Destination pond</span>
           </label>
           <select id="target-pond" v-model="targetPondId" class="form-select font-sans">
             <option v-for="p in availableTargetPonds" :key="p.id" :value="p.id">

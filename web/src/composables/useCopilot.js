@@ -29,15 +29,15 @@ export function useCopilot() {
       senderName: 'Co-Pilot',
       timestamp: '08:00 WIB',
       isBriefing: true,
-      text: `☀ **BRIEFING PAGI (KOLAM #4)**\n\nRingkasan 24 jam:\n• **Oksigen terlarut (DO)**: 6.2 mg/L\n• **pH**: 7.5 | **Suhu**: 28.5°C\n• **TAN**: 0.02 mg/L\n• **Kepadatan bioflok**: 12 mL/L\n\nJendela pakan yang dijadwalkan: **5.2 kg** pada 14:00 WIB. Data ini SIMULASI.`,
-      englishCaption: 'Morning briefing, Pond #4. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L, biofloc 12 mL/L. Scheduled feed window: 5.2 kg at 14:00 WIB. This data is simulated.'
+      text: `Morning briefing, Kolam A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.`,
+      englishCaption: 'Morning briefing, Kolam A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.'
     },
     {
       id: 'm2',
       role: 'user',
       senderName: 'Supervisor (Ilfa)',
       timestamp: '08:02 WIB',
-      text: 'Confirm 5.2 kg feed for Pond #4.'
+      text: 'Confirm the morning feed for Kolam A.'
     },
     {
       id: 'm3',

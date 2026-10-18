@@ -96,7 +96,7 @@ const handleAeratorSet = (targetPower) => {
     customAeratorPower.value = targetPower
   }
   setAeratorBoost(activePond.value.id, customAeratorPower.value)
-  showToast(`🌪️ Aeration Adjusted: Blower power set to ${customAeratorPower.value}% RPM for ${activePond.value.name}.`, 'warning')
+  showToast(`Aerator updated for ${activePond.value.name}. This stays in the demo.`, 'warning')
 }
 
 const handleMolassesPulse = () => {
@@ -347,7 +347,7 @@ const handleEmergencyFlush = () => {
             <Wind :size="18" />
           </div>
           <div class="device-info">
-            <span class="device-name">Dual VFD Oxygen Aerator</span>
+            <span class="device-name">Aerator</span>
             <span class="device-id font-mono">ID: {{ activePond.actuators.aerator.id }}</span>
           </div>
           <span 
@@ -361,7 +361,7 @@ const handleEmergencyFlush = () => {
         <!-- Customizable Aerator Power Slider & Presets -->
         <div class="dosage-control-box font-mono">
           <div class="dosage-top-row">
-            <span class="dosage-lbl"><Gauge :size="12" /> Aerator Power / RPM:</span>
+            <span class="dosage-lbl"><Gauge :size="12" /> Aerator</span>
             <div class="dosage-input-wrap">
               <span class="dosage-badge-val text-emerald">{{ customAeratorPower }}%</span>
             </div>
@@ -402,11 +402,11 @@ const handleEmergencyFlush = () => {
         <div class="actuator-stats font-mono">
           <div class="stat-line">
             <span class="stat-lbl">Active Blower Speed:</span>
-            <span class="stat-val text-emerald">{{ activePond.actuators.aerator.powerPercent }}% RPM</span>
+            <span class="stat-val text-emerald">Running</span>
           </div>
           <div class="stat-line">
             <span class="stat-lbl">Loop Synchronization:</span>
-            <span class="stat-val text-sky">ACTIVE (CLOSED-LOOP)</span>
+            <span class="stat-val text-sky">Simulated</span>
           </div>
         </div>
 
@@ -418,7 +418,7 @@ const handleEmergencyFlush = () => {
             @click="handleAeratorSet()"
           >
             <Zap :size="14" />
-            <span>{{ recommendedAction.type === 'aerate' ? `⚡ Set Aerator to ${customAeratorPower}% (Urgent)` : `Set Aerator to ${customAeratorPower}% RPM` }}</span>
+            <span>{{ recommendedAction.type === 'aerate' ? 'Turn the aerator up' : 'Update the aerator' }}</span>
           </button>
         </div>
       </div>
@@ -442,7 +442,7 @@ const handleEmergencyFlush = () => {
           </div>
           <div class="device-info">
             <span class="device-name">Emergency Siphon Valve</span>
-            <span class="device-id font-mono">ID: {{ activePond.actuators.flush?.id || 'ESP32-K04-FLUSH' }}</span>
+            <span class="device-id font-mono">ID: {{ activePond.actuators.flush?.id || 'sim-flush' }}</span>
           </div>
           <span 
             class="badge" 
