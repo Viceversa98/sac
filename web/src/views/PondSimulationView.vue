@@ -5,9 +5,11 @@ import SimulatedBanner from '../components/SimulatedBanner.vue'
 import PageIntro from '../components/PageIntro.vue'
 import IsometricPond from '../components/IsometricPond.vue'
 import { usePonds } from '../composables/usePonds'
+import { useCopilot } from '../composables/useCopilot'
 import { buildEspNodes, dissolvedOxygenBand, expectedReactions } from '../pondHardware'
 
 const { ponds, selectedPondId, activePond, setPond, applyScenario } = usePonds()
+const { sendMessage } = useCopilot()
 
 const projection = ref('pending')
 const hoveredId = ref('')
@@ -43,7 +45,7 @@ const scenarios = [
     id: 'sim-scenario-hypoxia',
     type: 'hypoxia',
     label: 'Hypoxia',
-    detail: 'DO 3.2 mg/L on the selected pond',
+    detail: 'DO 2.9 mg/L on the selected pond',
     icon: AlertTriangle,
     tone: 'rose'
   },
@@ -70,7 +72,10 @@ const handleSelectPond = (pondId) => {
 }
 
 const handleScenario = (type) => {
-  applyScenario(type, activePond.value?.id || 'A')
+  const pond = applyScenario(type, activePond.value?.id || 'A')
+  if (!pond || (type !== 'hypoxia' && type !== 'ammonia_spike')) return
+  window.dispatchEvent(new Event('sampay-open-agent'))
+  sendMessage(`fix pond ${pond.id}`)
 }
 
 const handleProjection = (kind) => {

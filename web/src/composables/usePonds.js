@@ -362,6 +362,7 @@ const applyApiPond = (apiPond) => {
   pond.species = apiPond.species || pond.species
   pond.volumeM3 = numberOr(apiPond.volume_m3, pond.volumeM3)
   pond.telemetrySource = 'api'
+  pond.scenarioActive = false
   pond.telemetry.do = numberOr(stats?.do?.last, pond.telemetry.do)
   pond.telemetry.ph = numberOr(stats?.ph?.last, pond.telemetry.ph)
   pond.telemetry.temp = numberOr(stats?.temp?.last, pond.telemetry.temp)
@@ -537,19 +538,23 @@ export function usePonds() {
     selectedPondId.value = target.id
 
     if (type === 'hypoxia') {
-      target.telemetry.do = 3.2
+      target.scenarioActive = true
+      target.telemetry.do = 2.9
       target.status = 'CRITICAL'
       target.healthScore = 68
       target.actuators.aerator.powerPercent = 60
     } else if (type === 'ammonia_spike') {
+      target.scenarioActive = true
       target.telemetry.ammonia = 0.082
       target.telemetry.ph = 7.9
       target.status = 'CAUTION'
       target.healthScore = 78
     } else if (type === 'feeding_window') {
+      target.scenarioActive = true
       target.status = 'OPTIMAL'
       target.actuators.feeder.status = 'READY'
     } else if (type === 'reset') {
+      target.scenarioActive = false
       target.telemetry.do = 6.25
       target.telemetry.ph = 7.52
       target.telemetry.temp = 28.5

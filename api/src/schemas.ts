@@ -61,6 +61,11 @@ export const briefingBodySchema = z.object({
 export const chatBodySchema = z.object({
   message: z.string().min(1).max(2000),
   lang: z.enum(['id', 'en']).optional(),
+  screen: z.object({
+    pond_id: z.enum(['A', 'B']),
+    do_mgL: z.number(),
+    tan_mgL: z.number(),
+  }).optional(),
 });
 
 export const noteBodySchema = z.object({

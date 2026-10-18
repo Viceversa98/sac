@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopHeader from './components/TopHeader.vue'
@@ -23,6 +23,18 @@ const toggleAgent = () => {
 const handleCloseAgent = () => {
   isAgentOpen.value = false
 }
+
+const handleOpenAgent = () => {
+  isAgentOpen.value = true
+}
+
+onMounted(() => {
+  window.addEventListener('sampay-open-agent', handleOpenAgent)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('sampay-open-agent', handleOpenAgent)
+})
 </script>
 
 <template>
