@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { apiUrl } from '../api'
 import { usePonds } from '../composables/usePonds'
 import {
   Download,
@@ -15,7 +16,60 @@ import {
 } from 'lucide-vue-next'
 import PageIntro from '../components/PageIntro.vue'
 
-const { ponds, globalFarmMetrics, operationalLogs } = usePonds()
+const { ponds, globalFarmMetrics } = usePonds()
+const auditLogs = ref([])
+const auditMessage = ref('Loading the audit log.')
+
+const eventStatus = (event) => {
+  if (event === 'blocked' || event === 'refused') return 'REFUSED'
+  return String(event || 'recorded').replaceAll('_', ' ').toUpperCase()
+}
+
+const doseText = (event) => {
+  const args = event.args && typeof event.args === 'object' ? event.args : {}
+  if (args.g_per_L != null) return `${args.g_per_L} g/L`
+  if (args.duration_min != null) return `${args.duration_min} min`
+  if (args.kg != null) return `${args.kg} kg`
+  return event.tool_name || 'Audit row'
+}
+
+const loadAudit = async () => {
+  try {
+    const response = await fetch(apiUrl('/api/audit-events'), { headers: { Accept: 'application/json' } })
+    if (!response.ok) {
+      auditMessage.value = `The audit log returned ${response.status}.`
+      auditLogs.value = []
+      return
+    }
+    const body = await response.json()
+    auditLogs.value = (body.events || []).map((event) => ({
+      id: event.id,
+      time: event.recorded_at || '',
+      pondId: event.pond_id || '',
+      pondName: event.pond_id ? `Pond ${event.pond_id}` : 'Farm',
+      category: event.tool_name === 'dose_molasses_gL' ? 'MOLASSES' : (event.tool_name === 'set_feeder_kg' ? 'FEEDING' : (event.tool_name || 'audit')),
+      type: 'AUTO',
+      actor: 'sampay',
+      action: event.tool_name || event.event || 'Audit',
+      dosage: doseText(event),
+      hardware: 'No hardware command',
+      status: eventStatus(event.event),
+      notes: event.note || (event.safety_result && event.safety_result.detail) || 'Recorded in Firestore audit_events.'
+    }))
+    auditMessage.value = auditLogs.value.length ? '' : 'No audit events yet. Reset the demo to seed one.'
+  } catch {
+    auditLogs.value = []
+    auditMessage.value = 'The audit log is unreachable.'
+  }
+}
+
+onMounted(() => {
+  loadAudit()
+  window.addEventListener('sampay-audit-changed', loadAudit)
+})
+onUnmounted(() => {
+  window.removeEventListener('sampay-audit-changed', loadAudit)
+})
 
 const selectedPondFilter = ref('ALL') // 'ALL' | 'K01' | 'K02' | 'K03' | 'K04'
 const filterType = ref('ALL') // 'ALL' | 'AUTO' | 'MANUAL_ADJUST' | 'FEEDING' | 'MOLASSES' | 'MORTALITY'
@@ -55,7 +109,7 @@ const currentMetrics = computed(() => {
 })
 
 const filteredLogs = computed(() => {
-  return operationalLogs.value.filter(log => {
+  return auditLogs.value.filter(log => {
     // Pond filter
     if (selectedPondFilter.value !== 'ALL' && log.pondId && log.pondId !== selectedPondFilter.value) {
       return false
@@ -127,7 +181,7 @@ const exportLogsCsv = () => {
           @click="selectedPondFilter = 'ALL'"
         >
           <Building2 :size="12" />
-          <span>Farm Total (All 4 Ponds)</span>
+          <span>All ponds</span>
         </button>
         <button 
           v-for="p in ponds" 
@@ -299,14 +353,14 @@ const exportLogsCsv = () => {
               {{ log.notes }}
             </td>
             <td style="text-align: right;">
-              <span class="badge badge-emerald font-mono">
+              <span class="badge font-mono" :class="log.status === 'REFUSED' ? 'badge-rose' : 'badge-emerald'">
                 {{ log.status }}
               </span>
             </td>
           </tr>
           <tr v-if="filteredLogs.length === 0">
             <td colspan="7" class="empty-cell">
-              No log entries match the selected filter criteria.
+              {{ auditMessage || 'No log entries match the selected filter criteria.' }}
             </td>
           </tr>
         </tbody>

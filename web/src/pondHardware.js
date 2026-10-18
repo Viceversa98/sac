@@ -1,5 +1,9 @@
-// Numeric limits copied from api/src/thresholds.ts so the scene stays rule-based.
+// DO_CRITICAL_MGL is the sourced aerator line, 3 mg/L.
+// DO_FLOOR_MGL is the sourced critical line, 1.0 mg/L.
+// DO_LOW_MGL is only the Overview watch band. It is not an SOP limit.
 export const DO_CRITICAL_MGL = 3
+export const DO_FLOOR_MGL = 1
+export const DO_SOP_MGL = DO_CRITICAL_MGL
 export const DO_LOW_MGL = 4.5
 export const NH3_OPT_MGL = 0.05
 export const PH_MIN = 7

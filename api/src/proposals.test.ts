@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseTelemetryCsv } from './csv.js';
 import { telemetryFile } from './paths.js';
-import { parseIntentLocal, planBriefingActions, planFromIntent, planRepair, type PondContext } from './proposals.js';
+import { blockedMolassesProposal, parseIntentLocal, pendingKolamProposal, planBriefingActions, planFromIntent, planRepair, type PondContext } from './proposals.js';
 import { stats, withinHours } from './stats.js';
 
 const pond = (id: 'A' | 'B', latestDo: number, latestTan: number): PondContext => ({
@@ -57,8 +57,10 @@ describe('chat decisions', () => {
 });
 
 describe('repair from the latest reading', () => {
-  it('proposes an aerator for low oxygen and molasses for high ammonia', () => {
-    const lowOxygen = planRepair(pond('A', 3.1, 0.02));
+  it('proposes an aerator at the 3 mg/L SOP line and molasses for high ammonia', () => {
+    expect(planRepair(pond('A', 3.1, 0.02))).toEqual([]);
+
+    const lowOxygen = planRepair(pond('A', 2.9, 0.02));
     expect(lowOxygen.map((call) => call.tool_name)).toEqual(['start_aerator']);
     expect(lowOxygen[0]?.args.duration_min).toBe(120);
     expect(lowOxygen[0]?.status).toBe('proposed');
@@ -67,11 +69,23 @@ describe('repair from the latest reading', () => {
     expect(highAmmonia.map((call) => call.tool_name)).toEqual(['dose_molasses_gL']);
     expect(highAmmonia[0]?.status).toBe('proposed');
 
-    const both = planRepair(pond('A', 3.1, 0.4));
+    const both = planRepair(pond('A', 2.9, 0.4));
     expect(both.map((call) => call.tool_name)).toEqual(['start_aerator', 'dose_molasses_gL']);
 
     const blockedDose = planRepair(pond('A', 2.4, 0.4));
     expect(blockedDose.find((call) => call.tool_name === 'dose_molasses_gL')?.status).toBe('blocked');
+  });
+
+  it('seeds one waiting Kolam B dose and one refused 0.20 g/L call', () => {
+    const pending = pendingKolamProposal(pond('B', 5.27, 1));
+    expect(pending.pond_id).toBe('B');
+    expect(pending.status).toBe('proposed');
+    expect(pending.tool_name).toBe('dose_molasses_gL');
+
+    const refused = blockedMolassesProposal('A', 5.5);
+    expect(refused.status).toBe('blocked');
+    expect(refused.args.g_per_L).toBe(0.2);
+    expect(refused.safety.ok).toBe(false);
   });
 
   it('returns no card when the pond is already in range', () => {

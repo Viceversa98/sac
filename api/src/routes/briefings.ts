@@ -4,17 +4,14 @@ import { zValidator } from '@hono/zod-validator';
 import { appendAudit } from '../audit.js';
 import { citationsFor } from '../citations.js';
 import { dbErrorStatus, insertToolCall, listPonds, telemetryWindow } from '../db/repo.js';
-import { geminiModel, streamGenerate, writeBriefing } from '../gemini.js';
 import { demoRateLimit } from '../rate-limit.js';
 import { englishCaption, factsForPond, planBriefingActions, type Fact } from '../proposals.js';
-import { fallbackBriefing, promptA } from '../prompts.js';
+import { fallbackBriefing } from '../prompts.js';
 import { briefingBodySchema } from '../schemas.js';
 import { ingestSopFiles, listChunks } from '../sop/store.js';
 import { textChunks } from '../text-chunks.js';
 
 export const briefingRoutes = new Hono();
-
-const cache = new Map<string, string>();
 
 type BriefingDraft = {
   lang: 'id' | 'en';
@@ -109,59 +106,17 @@ const briefingPayload = (
 });
 
 async function* briefingChunks(draft: BriefingDraft): AsyncGenerator<{ text: string; model: string | null; cached: boolean }> {
-  const fallback = fallbackBriefing(draft.lang, draft.facts);
-  let sent = false;
-  try {
-    let full = '';
-    for await (const piece of streamGenerate({
-      model: geminiModel(),
-      prompt: promptA(draft.lang, draft.pondPayload, draft.chunks.slice(0, 6), draft.doses),
-      temperature: 0.2,
-      tools: true,
-    })) {
-      sent = true;
-      full += piece;
-      yield { text: piece, model: geminiModel(), cached: false };
-    }
-    const trimmed = full.trim();
-    if (trimmed) cache.set(draft.lang, trimmed);
-    if (!sent) {
-      for (const piece of textChunks(fallback)) yield { text: piece, model: null, cached: false };
-    }
-  } catch (err) {
-    console.error('briefing model unavailable', err instanceof Error ? err.message : err);
-    if (sent) return;
-    const saved = cache.get(draft.lang);
-    const text = saved || fallback;
-    for (const piece of textChunks(text)) yield { text: piece, model: null, cached: Boolean(saved) };
-  }
+  const fallback = fallbackBriefing('en', draft.facts);
+  for (const piece of textChunks(fallback)) yield { text: piece, model: null, cached: false };
 }
 
 briefingRoutes.post('/api/briefings', demoRateLimit, zValidator('json', briefingBodySchema), async (c) => {
-  const lang = c.req.valid('json').lang ?? 'id';
+  const lang = 'en' as const;
   const requested = c.req.valid('json').pond_ids;
   try {
     const draft = await prepareBriefing(lang, requested);
-    let briefing = '';
-    let model: string | null = null;
-    let cached = false;
-    try {
-      const written = await writeBriefing(lang, draft.pondPayload, draft.chunks.slice(0, 6), draft.doses);
-      briefing = written.text;
-      model = written.model;
-      if (briefing) cache.set(lang, briefing);
-    } catch (err) {
-      const saved = cache.get(lang);
-      if (saved) {
-        briefing = saved;
-        cached = true;
-      } else {
-        briefing = fallbackBriefing(lang, draft.facts);
-      }
-      console.error('briefing model unavailable', err instanceof Error ? err.message : err);
-    }
-    if (!briefing) briefing = fallbackBriefing(lang, draft.facts);
-    return c.json(briefingPayload(draft, briefing, model, cached));
+    const briefing = fallbackBriefing(lang, draft.facts);
+    return c.json(briefingPayload(draft, briefing, null, false));
   } catch (err) {
     const mapped = dbErrorStatus(err);
     if (mapped) return c.json(mapped.body, mapped.status);
@@ -170,7 +125,7 @@ briefingRoutes.post('/api/briefings', demoRateLimit, zValidator('json', briefing
 });
 
 briefingRoutes.post('/api/briefings/stream', demoRateLimit, zValidator('json', briefingBodySchema), async (c) => {
-  const lang = c.req.valid('json').lang ?? 'id';
+  const lang = 'en' as const;
   const requested = c.req.valid('json').pond_ids;
   try {
     const draft = await prepareBriefing(lang, requested);

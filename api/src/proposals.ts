@@ -1,7 +1,7 @@
 import type { SafetyResult, ToolName } from './safety.js';
 import { checkAerator, checkFeeder, checkMolasses, flagDo, flagNh3, flagPh, flagTemp } from './safety.js';
 import { suggestMolasses } from './molasses.js';
-import { NH3_OPT_MGL } from './thresholds.js';
+import { DO_TARGET_MIN_MGL, NH3_OPT_MGL } from './thresholds.js';
 import type { PondStats } from './stats.js';
 import { aeratorArgsSchema, feederArgsSchema, intentSchema, molassesArgsSchema, type Intent } from './schemas.js';
 
@@ -23,7 +23,6 @@ export type PondContext = {
 };
 
 const DEFAULT_AERATOR_MINUTES = 120;
-const REPAIR_DO_BELOW_MGL = 4.5;
 
 export const isRepairRequest = (message: string): boolean =>
   /\bfix\b|\brepair\b|perbaiki|\bbaiki\b|\bhelp\b|tolong|apa masalah|\bcheck\b/i.test(message);
@@ -139,7 +138,7 @@ export const planFromIntent = (intent: Intent, pond: PondContext): PlannedCall |
 
 export const planRepair = (pond: PondContext): PlannedCall[] => {
   const calls: PlannedCall[] = [];
-  if (pond.latest_do != null && pond.latest_do < REPAIR_DO_BELOW_MGL) {
+  if (pond.latest_do != null && pond.latest_do <= DO_TARGET_MIN_MGL) {
     const safety = checkAerator(DEFAULT_AERATOR_MINUTES);
     calls.push({
       pond_id: pond.id,
@@ -147,7 +146,7 @@ export const planRepair = (pond: PondContext): PlannedCall[] => {
       args: aeratorArgsSchema.parse({
         pond_id: pond.id,
         duration_min: DEFAULT_AERATOR_MINUTES,
-        reason: `Oxygen ${pond.latest_do} mg/L is below ${REPAIR_DO_BELOW_MGL} mg/L`,
+        reason: `Oxygen ${pond.latest_do} mg/L is at or below the 3 mg/L SOP line`,
       }),
       safety,
       status: safety.ok ? 'proposed' : 'blocked',
@@ -178,6 +177,67 @@ export const planRepair = (pond: PondContext): PlannedCall[] => {
     });
   }
   return calls;
+};
+
+export const pendingKolamProposal = (pond: PondContext): PlannedCall => {
+  if (pond.latest_tan != null && pond.latest_tan > NH3_OPT_MGL) {
+    const dose = suggestMolasses(pond.latest_tan, pond.volume_m3);
+    if (!dose.capped) {
+      const safety = checkMolasses(dose.g_per_L, pond.latest_do);
+      if (safety.ok) {
+        return {
+          pond_id: pond.id,
+          tool_name: 'dose_molasses_gL',
+          args: {
+            ...molassesArgsSchema.parse({
+              pond_id: pond.id,
+              g_per_L: dose.g_per_L,
+              tan_mgL_basis: pond.latest_tan,
+              reason: `Node dose for TAN ${pond.latest_tan} mg/L in ${pond.volume_m3} m3`,
+            }),
+            kg_total: dose.kg,
+          },
+          safety,
+          status: 'proposed',
+          prompt_id: 'C',
+        };
+      }
+    }
+  }
+  const safety = checkAerator(DEFAULT_AERATOR_MINUTES);
+  return {
+    pond_id: pond.id,
+    tool_name: 'start_aerator',
+    args: aeratorArgsSchema.parse({
+      pond_id: pond.id,
+      duration_min: DEFAULT_AERATOR_MINUTES,
+      reason: 'Seeded so the approval queue is not empty',
+    }),
+    safety,
+    status: safety.ok ? 'proposed' : 'blocked',
+    prompt_id: 'C',
+  };
+};
+
+export const blockedMolassesProposal = (pondId: string, latestDo: number | null): PlannedCall => {
+  const gPerL = 0.2;
+  const safety = checkMolasses(gPerL, latestDo);
+  return {
+    pond_id: pondId,
+    tool_name: 'dose_molasses_gL',
+    args: {
+      ...molassesArgsSchema.parse({
+        pond_id: pondId,
+        g_per_L: gPerL,
+        tan_mgL_basis: 0,
+        reason: 'Seeded 0.20 g/L refusal',
+      }),
+      kg_total: Math.round(gPerL * 30 * 100) / 100,
+    },
+    safety,
+    status: 'blocked',
+    prompt_id: 'D',
+  };
 };
 
 // WHY 120 minutes: SOP-02's demo default, inside the 15–240 minute block.

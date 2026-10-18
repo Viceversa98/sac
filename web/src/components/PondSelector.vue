@@ -57,9 +57,9 @@ const pondCards = computed(() => {
     } else if (p.telemetry.ammonia > 0.04) {
       assessmentNote = 'Elevated TAN: Bacterial carbon deficit detected.'
     } else if (p.id === 'A') {
-      assessmentNote = 'Kolam A. Simulated tilapia biofloc, 30 m³.'
+      assessmentNote = 'Pond A. Simulated tilapia biofloc, 30 m³.'
     } else if (p.id === 'B') {
-      assessmentNote = 'Kolam B. Simulated tilapia biofloc, 30 m³.'
+      assessmentNote = 'Pond B. Simulated tilapia biofloc, 30 m³.'
     } else {
       assessmentNote = 'Simulated pond.'
     }

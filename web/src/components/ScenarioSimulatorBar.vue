@@ -23,7 +23,7 @@ const handleChoosePond = (pondId) => {
 
 const handleScenario = (type, title) => {
   const pond = applyScenario(type, scenarioPondId.value)
-  const name = pond?.name || `Kolam ${scenarioPondId.value}`
+  const name = pond?.name || `Pond ${scenarioPondId.value}`
   showToast(`Demo scenario: ${title} on ${name}`, 'warning', 4000)
 }
 </script>
@@ -55,7 +55,7 @@ const handleScenario = (type, title) => {
         :aria-label="`Test ${pond.name}`"
         @click="handleChoosePond(pond.id)"
       >
-        Kolam {{ pond.id }}
+        Pond {{ pond.id }}
       </button>
     </div>
 

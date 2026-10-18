@@ -2,11 +2,13 @@
 import { ref } from 'vue'
 import { apiUrl } from '../api'
 import { usePonds } from '../composables/usePonds'
+import { useCopilot } from '../composables/useCopilot'
 import { useToast } from '../composables/useToast'
 import { SlidersHorizontal, RotateCcw, Sparkles } from 'lucide-vue-next'
 
 const emit = defineEmits(['toggle-simulator', 'toggle-agent'])
 const { refreshFromApi } = usePonds()
+const { reloadQueue } = useCopilot()
 const { showToast } = useToast()
 const isResetting = ref(false)
 const resetError = ref('')
@@ -37,7 +39,9 @@ const handleResetDemo = async () => {
       return
     }
     await refreshFromApi()
-    showToast('Demo reset. Pond readings were reloaded from the API.', 'success')
+    await reloadQueue()
+    window.dispatchEvent(new Event('sampay-audit-changed'))
+    showToast('Demo reset. One Pond B proposal is waiting for approval.', 'success')
   } catch {
     resetError.value = 'API unreachable.'
     showToast('API is unreachable. Demo was not reset.', 'error')

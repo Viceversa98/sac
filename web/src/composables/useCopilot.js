@@ -105,15 +105,15 @@ function createCopilot() {
       senderName: 'Co-Pilot',
       timestamp: '08:00 WIB',
       isBriefing: true,
-      text: `Morning briefing, Kolam A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.`,
-      englishCaption: 'Morning briefing, Kolam A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.'
+      text: `Morning briefing, Pond A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.`,
+      englishCaption: 'Morning briefing, Pond A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.'
     },
     {
       id: 'm2',
       role: 'user',
       senderName: 'Supervisor (Ilfa)',
       timestamp: '08:02 WIB',
-      text: 'Confirm the morning feed for Kolam A.'
+      text: 'Confirm the morning feed for Pond A.'
     },
     {
       id: 'm3',
@@ -124,7 +124,7 @@ function createCopilot() {
     }
   ])
 
-  const pondLabel = (id) => (id === 'A' || id === 'B' ? `Kolam ${id}` : `Pond ${id || 'unknown'}`)
+  const pondLabel = (id) => `Pond ${id || 'unknown'}`
 
   const describeCall = (call) => {
     const args = call.args && typeof call.args === 'object' ? call.args : {}
@@ -167,13 +167,13 @@ function createCopilot() {
     return {
       id: String(call.id),
       toolCallId: String(call.id),
-      title: pending ? 'Needs your decision' : 'Blocked',
+      title: pending ? 'Needs your decision' : 'REFUSED',
       pondId: call.pond_id,
       type: call.tool_name,
       targetDevice: words.label,
       summary: words.summary,
       description: words.detail,
-      status: pending ? 'pending' : 'cancelled'
+      status: pending ? 'pending' : 'blocked'
     }
   }
 
@@ -268,7 +268,7 @@ function createCopilot() {
     const draft = startDraft(messages)
 
     try {
-      const body = wantsBriefing ? { lang: 'id' } : { message: userText, lang: 'id' }
+      const body = wantsBriefing ? { lang: 'en' } : { message: userText, lang: 'en' }
       const streamPath = wantsBriefing ? '/api/briefings/stream' : '/api/chat/stream'
       const jsonPath = wantsBriefing ? '/api/briefings' : '/api/chat'
       let response = await fetch(apiUrl(streamPath), {
@@ -353,24 +353,31 @@ function createCopilot() {
     }
   }
 
-  const loadProposed = async () => {
-    try {
-      const response = await fetch(apiUrl('/api/tool-calls?status=proposed'), { headers: { Accept: 'application/json' } })
-      if (!response.ok) return
-      const data = await response.json()
-      for (const call of data.tool_calls || []) {
-        const already = messages.value.some((message) => message.actionCard?.toolCallId === String(call.id))
-        if (already) continue
-        const card = cardFromCall(call)
-        pushAssistant(messages, card.summary, { actionCard: card })
+  const loadQueue = async () => {
+    for (const status of ['proposed', 'blocked']) {
+      try {
+        const response = await fetch(apiUrl(`/api/tool-calls?status=${status}`), { headers: { Accept: 'application/json' } })
+        if (!response.ok) continue
+        const data = await response.json()
+        for (const call of data.tool_calls || []) {
+          const already = messages.value.some((message) => message.actionCard?.toolCallId === String(call.id))
+          if (already) continue
+          const card = cardFromCall(call)
+          pushAssistant(messages, card.summary, { actionCard: card })
+        }
+      } catch {
+        // The canned briefing stays on screen when the API is down.
       }
-    } catch {
-      // The canned briefing stays on screen when the API is down.
     }
   }
 
+  const reloadQueue = async () => {
+    messages.value = messages.value.filter((message) => !message.actionCard?.toolCallId)
+    await loadQueue()
+  }
+
   if (typeof window !== 'undefined') {
-    loadProposed()
+    loadQueue()
   }
 
   return {
@@ -379,6 +386,7 @@ function createCopilot() {
     autoPilotMode,
     sendMessage,
     authorizeAction,
-    cancelAction
+    cancelAction,
+    reloadQueue
   }
 }
