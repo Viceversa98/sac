@@ -16,8 +16,9 @@ const { applyScenario, isLiveSimulationRunning } = usePonds()
 const { showToast } = useToast()
 
 const handleScenario = (type, title) => {
-  applyScenario(type)
-  showToast(`Demo scenario: ${title} on Kolam A`, 'warning', 4000)
+  const pond = applyScenario(type)
+  const name = pond?.name || 'Kolam A'
+  showToast(`Demo scenario: ${title} on ${name}`, 'warning', 4000)
 }
 </script>
 
