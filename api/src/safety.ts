@@ -45,12 +45,12 @@ const block = (rule: string, detail: string, citation: string): SafetyResult => 
 // WHY: g/L is checked before DO so a 0.2 g/L request is MOLASSES_MAX_GL even when DO is also low.
 export const checkMolasses = (gPerL: number, latestDoMgL: number | null): SafetyResult => {
   if (!(gPerL > 0) || Number.isNaN(gPerL)) {
-    return block('MOLASSES_MAX_GL', 'g_per_L must be a number greater than 0', SOURCE_MOLASSES_MAX);
+    return block('MOLASSES_MAX_GL', 'The dose must be a number greater than 0', SOURCE_MOLASSES_MAX);
   }
   if (gPerL > MOLASSES_MAX_GL) {
     return block(
       'MOLASSES_MAX_GL',
-      `g_per_L ${gPerL} is above ${MOLASSES_MAX_GL} g/L`,
+      `${gPerL} g/L is above ${MOLASSES_MAX_GL} g/L`,
       SOURCE_MOLASSES_MAX,
     );
   }
@@ -61,7 +61,7 @@ export const checkMolasses = (gPerL: number, latestDoMgL: number | null): Safety
       `${SOURCE_MOLASSES_MAX}; ${SOURCE_DO}`,
     );
   }
-  return pass('MOLASSES_MAX_GL', `g_per_L ${gPerL} is within ${MOLASSES_MAX_GL} g/L and DO is above 3 mg/L`, SOURCE_MOLASSES_MAX);
+  return pass('MOLASSES_MAX_GL', `${gPerL} g/L is within ${MOLASSES_MAX_GL} g/L and DO is above 3 mg/L`, SOURCE_MOLASSES_MAX);
 };
 
 export const checkAerator = (durationMin: number): SafetyResult => {

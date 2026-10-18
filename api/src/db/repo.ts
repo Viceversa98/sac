@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { parseTelemetryCsv, type TelemetryRow } from '../csv.js';
 import { telemetryFile } from '../paths.js';
 import { formatUtcSql, formatWib, parseUtcSql, stats, withinHours } from '../stats.js';
@@ -267,5 +267,7 @@ export const resetDemoRows = async (): Promise<void> => {
   await db.transaction(async (tx) => {
     await tx.delete(approvals);
     await tx.delete(toolCalls);
+    // Approval writes a newer simulated point. CSV replay skips timestamps it already has, so that point stayed latest and the next seed became an aerator.
+    await tx.delete(telemetryReadings).where(inArray(telemetryReadings.pondId, ['A', 'B']));
   });
 };

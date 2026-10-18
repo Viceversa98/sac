@@ -98,15 +98,15 @@ function createCopilot() {
   const isThinking = ref(false)
   const autoPilotMode = ref(false)
 
-  const messages = ref([
+  const openingMessages = () => [
     {
       id: 'm1',
       role: 'assistant',
       senderName: 'Co-Pilot',
       timestamp: '08:00 WIB',
       isBriefing: true,
-      text: `Morning briefing, Pond A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.`,
-      englishCaption: 'Morning briefing, Pond A. Dissolved oxygen 6.2 mg/L, pH 7.5, temperature 28.5°C, TAN 0.02 mg/L. This data is simulated.'
+      text: 'Morning briefing, Pond A. Dissolved oxygen 3.1 mg/L, Low. The low in this file is 2.4 mg/L at 04:00. This data is simulated.',
+      englishCaption: 'Morning briefing, Pond A. Dissolved oxygen 3.1 mg/L, Low. The low in this file is 2.4 mg/L at 04:00. This data is simulated.'
     },
     {
       id: 'm2',
@@ -122,7 +122,9 @@ function createCopilot() {
       timestamp: '08:02 WIB',
       text: 'Supervisor instruction received. Dissolved oxygen and temperature in the briefing support a feed proposal. Approving writes an audit row only.',
     }
-  ])
+  ]
+
+  const messages = ref(openingMessages())
 
   const pondLabel = (id) => `Pond ${id || 'unknown'}`
 
@@ -219,7 +221,7 @@ function createCopilot() {
         const result = applyApprovedAction(actionCard.type, actionCard.pondId)
         window.dispatchEvent(new Event('sampay-audit-changed'))
         const reading = result
-          ? ` Simulated pond quality for ${result.name}: oxygen ${Number(result.do).toFixed(2)} mg/L, ammonia ${Number(result.ammonia).toFixed(3)} mg/L.`
+          ? ` Simulated pond quality for ${result.name}: oxygen ${Number(result.do).toFixed(2)} mg/L, ammonia (TAN) ${Number(result.ammonia).toFixed(3)} mg/L.`
           : ''
         actionCard.resultNote = reading.trim()
         showToast(`Approved.${reading} No equipment was switched on.`, 'success')
@@ -385,8 +387,10 @@ function createCopilot() {
     }
   }
 
-  const reloadQueue = async () => {
-    messages.value = messages.value.filter((message) => !message.actionCard?.toolCallId)
+  const reloadQueue = async (options = {}) => {
+    messages.value = options.restoreOpening
+      ? openingMessages()
+      : messages.value.filter((message) => !message.actionCard?.toolCallId)
     await loadQueue()
   }
 

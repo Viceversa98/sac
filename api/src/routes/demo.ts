@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { appendAudit } from '../audit.js';
 import { citationsFor } from '../citations.js';
-import { dbErrorStatus, getPond, insertToolCall, latestPoint, resetDemoRows, replayFile } from '../db/repo.js';
+import { dbErrorStatus, getPond, insertToolCall, resetDemoRows, replayFile, telemetryWindow } from '../db/repo.js';
 import { blockedMolassesProposal, pendingKolamProposal, type PlannedCall } from '../proposals.js';
 import { demoRateLimit } from '../rate-limit.js';
 import { listChunks } from '../sop/store.js';
@@ -38,19 +38,38 @@ const saveSeed = async (call: PlannedCall, event: 'proposed' | 'refused') => {
   return { id, status: call.status, audit_sync: audit.audit_sync };
 };
 
+const near = (value: number | null | undefined, expected: number) =>
+  value != null && Math.abs(value - expected) < 0.001;
+
 const seedJudgeQueue = async () => {
   const pond = await getPond('B');
-  const latestB = await latestPoint('B');
-  const latestA = await latestPoint('A');
+  const windowA = await telemetryWindow('A', 24);
+  const windowB = await telemetryWindow('B', 24);
+  const statsA = windowA?.stats;
+  const statsB = windowB?.stats;
+  if (
+    !statsA ||
+    !statsB ||
+    !near(statsA.do.min, 2.4) ||
+    !statsA.do.min_at_wib?.endsWith('04:00') ||
+    !near(statsA.do.last, 3.1) ||
+    !near(statsB.tan.last, 1) ||
+    !near(statsB.nh3.last, 0.06)
+  ) {
+    throw new Error('Reset did not restore the seed readings');
+  }
   const pending = pendingKolamProposal({
     id: 'B',
     volume_m3: pond?.volume_m3 ?? 30,
     max_feed_kg: pond?.max_feed_kg ?? null,
-    latest_do: latestB?.do_mgL ?? null,
-    latest_tan: latestB?.tan_mgL ?? null,
-    latest_nh3: latestB?.nh3_mgL ?? null,
+    latest_do: statsB.do.last,
+    latest_tan: statsB.tan.last,
+    latest_nh3: statsB.nh3.last,
   });
-  const refused = blockedMolassesProposal('A', latestA?.do_mgL ?? null);
+  if (pending.tool_name !== 'dose_molasses_gL' || pending.status !== 'proposed' || pending.args.g_per_L !== 0.045) {
+    throw new Error('Reset did not restore the Pond B molasses reading');
+  }
+  const refused = blockedMolassesProposal('A', statsA.do.last);
   return {
     pending: await saveSeed(pending, 'proposed'),
     refused: await saveSeed(refused, 'refused'),

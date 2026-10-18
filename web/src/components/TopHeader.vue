@@ -38,10 +38,10 @@ const handleResetDemo = async () => {
       showToast('Demo was not reset. The API returned an error.', 'error')
       return
     }
+    showToast('Demo reset. Pond B molasses at 0.045 g/L is waiting for approval.', 'success')
     await refreshFromApi()
-    await reloadQueue()
+    await reloadQueue({ restoreOpening: true })
     window.dispatchEvent(new Event('sampay-audit-changed'))
-    showToast('Demo reset. One Pond B proposal is waiting for approval.', 'success')
   } catch {
     resetError.value = 'API unreachable.'
     showToast('API is unreachable. Demo was not reset.', 'error')
